@@ -9,7 +9,6 @@ import {
 import { isDefined } from "@cosmjs/utils";
 import { logSendJob } from "@cosmjs/faucet/build/debugging";
 import { makePathBuilder } from "@cosmjs/faucet/build/pathbuilder";
-import { type TokenConfiguration, TokenManager } from "@cosmjs/faucet/build/tokenmanager";
 import type { SendJob } from "@cosmjs/faucet/build/types";
 import { parseBankTokens } from "@cosmjs/faucet/build/tokens";
 import { Coin, Secp256k1HdWallet } from "@cosmjs/amino";
@@ -26,8 +25,8 @@ export interface CreditResponse {
   transactionHash: string;
 }
 
-export const getFaucet = async (config: FaucetConfig, mnemonic: string, pathPattern: string, addressPrefix: string, accountId: number): Promise<Faucet> => {
-  const { rpcUrl } = config;
+export const getFaucet = async (config: FaucetConfig, mnemonic: string, pathPattern: string, accountId: number): Promise<Faucet> => {
+  const { rpcUrl, addressPrefix } = config;
   const wallet = await getWallet(mnemonic, pathPattern, addressPrefix, accountId);
   const [faucetAccount] = await wallet.getAccounts();
   const faucetAddress = faucetAccount.address;
@@ -59,30 +58,25 @@ export const getAvailableTokens = async (client: StargateClient, address: string
 }
 
 export class Faucet {
-  public readonly addressPrefix: string;
+  public readonly config: FaucetConfig;
   public readonly address: string;
-  private readonly amountGiven: number;
-  private readonly gasLimitSend: number;
-  private readonly gasPrice: string;
   private readonly client: SigningStargateClient;
-  private tokenConfig: TokenConfiguration;
-  private readonly tokenManager: TokenManager;
+  private readonly bankTokens: string[];
 
   public constructor(
     config: FaucetConfig,
     client: SigningStargateClient,
     address: string,
   ) {
-    this.addressPrefix = config.addressPrefix;
-    this.amountGiven = config.amountGiven;
-    this.tokenConfig = {
-      bankTokens: parseBankTokens(config.tokens),
-    },
-      this.tokenManager = new TokenManager(this.tokenConfig);
-    this.gasLimitSend = parseInt(config.gasLimit, 10);
-    this.gasPrice = config.gasPrice;
+    this.config = config;
+    this.bankTokens = parseBankTokens(config.tokens);
     this.address = address;
     this.client = client;
+    if (config.logging === "true") {
+      console.log("config:" + JSON.stringify(config))
+      console.log("address:" + address)
+      console.log("bankTokens:" + this.bankTokens)
+    }
   }
 
   public async availableTokens(): Promise<string[]> {
@@ -90,17 +84,8 @@ export class Faucet {
     return getAvailableTokens(this.client, this.address, bankTokens);
   }
 
-
   public async getChainId(): Promise<string> {
     return this.client.getChainId();
-  }
-
-  public async send(job: SendJob): Promise<DeliverTxResponse> {
-    const client = this.client
-    const { sender, recipient, amount } = job;
-    const fee = calculateFee(this.gasLimitSend, this.gasPrice);
-    const result = await client.sendTokens(sender, recipient, [amount], fee, "Faucet send");
-    return result;
   }
 
   // credit amount from token manager accesses environment variables
@@ -112,9 +97,20 @@ export class Faucet {
     };
   }
 
+  public async send(job: SendJob): Promise<DeliverTxResponse> {
+    const client = this.client
+    const { sender, recipient, amount } = job;
+    const { gasPrice, gasLimit, memo } = this.config;
+    const gasLimitSend = parseInt(gasLimit, 10);
+    const fee = calculateFee(gasLimitSend, gasPrice);
+    const result = await client.sendTokens(sender, recipient, [amount], fee, memo);
+    return result;
+  }
+
   public async credit(recipient: string, denom: string): Promise<CreditResponse> {
     const sender = this.address;
-    const amount = this.creditAmount(this.amountGiven, denom);
+    const amountGiven = this.config.amountGiven;
+    const amount = this.creditAmount(amountGiven, denom);
     const job: SendJob = {
       sender,
       recipient,
@@ -132,6 +128,6 @@ export class Faucet {
   }
 
   public configuredTokens(): string[] {
-    return [...this.tokenConfig.bankTokens];
+    return [...this.bankTokens];
   }
 }

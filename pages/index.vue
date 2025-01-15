@@ -27,7 +27,7 @@
 				</v-form>
 
 				<!-- Step 2: Verification Challenge -->
-				<v-form v-if="walletAddress && isValid" @submit.prevent="submitForm">
+				<v-form @submit.prevent="submitForm">
 					<NuxtTurnstile ref="turnstile" v-model="verificationToken" data-refresh-timeout="manual" />
 					<v-btn type="submit" class="btn btn-primary d-block mx-auto" :disabled="isButtonDisabled">
 						{{ isLoading ? 'Loading...' : 'Continue' }}

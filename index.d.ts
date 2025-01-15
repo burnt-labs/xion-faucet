@@ -19,7 +19,6 @@ declare module 'nuxt/schema' {
         address: string;
         addressPrefix: string;
         amountGiven: number;
-        apiUrl: string;
         cooldownTime: number;
         denom: string;
         gasLimit: string;

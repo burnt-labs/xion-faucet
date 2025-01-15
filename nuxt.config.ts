@@ -33,7 +33,6 @@ export default defineNuxtConfig({
         address: process.env.NUXT_PUBLIC_FAUCET_ADDRESS as string,
         addressPrefix: process.env.NUXT_PUBLIC_FAUCET_ADDRESS_PREFIX as string,
         amountGiven: process.env.NUXT_PUBLIC_FAUCET_AMOUNT_GIVEN as unknown as number,
-        apiUrl: process.env.NUXT_PUBLIC_FAUCET_API_URL as string,
         cooldownTime: process.env.NUXT_PUBLIC_FAUCET_COOLDOWN_TIME as unknown as number,
         denom: process.env.NUXT_PUBLIC_FAUCET_DENOM as string,
         gasLimit: process.env.NUXT_PUBLIC_FAUCET_GAS_LIMIT as string,

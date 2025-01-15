@@ -73,11 +73,22 @@ export default defineEventHandler(async (event) => {
 
         const entry = await kvStore.get(address);
         if (entry !== null) {
-            throw new HttpError(`Too many requests for the same address. Blocked to prevent draining. Please wait ${cooldownTime} seconds and try again!`, 405);
+            const entryDate = new Date(entry);
+            const currentDate = new Date();
+            const cooldownEnd = new Date(entryDate.getTime() + cooldownTime * 1000);
+            const remainingTime = Math.ceil((cooldownEnd.getTime() - currentDate.getTime()) / 1000);
+
+            const hours = Math.floor(remainingTime / 3600);
+            const minutes = Math.floor((remainingTime % 3600) / 60);
+            const seconds = remainingTime % 60;
+
+            const humanReadableTime = `${hours}h ${minutes}m ${seconds}s`;
+
+            throw new HttpError(`Too many requests for the same address. Blocked to prevent draining. Please wait ${humanReadableTime} and try again!`, 405);
         }
 
         const accountId = await getAcoountId(kvStore);
-        const faucet = await getFaucet(faucetConfig, mnemonic, pathPattern, addressPrefix, accountId);
+        const faucet = await getFaucet(faucetConfig, mnemonic, pathPattern, accountId);
         const availableTokens = await faucet.availableTokens()
         const matchingDenom = availableTokens.find(
             (availableDenom: string) => availableDenom === denom
