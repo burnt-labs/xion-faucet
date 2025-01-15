@@ -15,6 +15,7 @@ import { parseBankTokens } from "@cosmjs/faucet/build/tokens";
 import { Coin, Secp256k1HdWallet } from "@cosmjs/amino";
 import { OfflineSigner } from "@cosmjs/proto-signing";
 import { FaucetConfig } from "nuxt/schema";
+import { Uint53 } from "@cosmjs/math";
 
 export interface CreditResponse {
   sender: string;
@@ -60,6 +61,7 @@ export const getAvailableTokens = async (client: StargateClient, address: string
 export class Faucet {
   public readonly addressPrefix: string;
   public readonly address: string;
+  private readonly amountGiven: number;
   private readonly gasLimitSend: number;
   private readonly gasPrice: string;
   private readonly client: SigningStargateClient;
@@ -72,11 +74,11 @@ export class Faucet {
     address: string,
   ) {
     this.addressPrefix = config.addressPrefix;
+    this.amountGiven = config.amountGiven;
     this.tokenConfig = {
       bankTokens: parseBankTokens(config.tokens),
     },
       this.tokenManager = new TokenManager(this.tokenConfig);
-
     this.gasLimitSend = parseInt(config.gasLimit, 10);
     this.gasPrice = config.gasPrice;
     this.address = address;
@@ -101,9 +103,18 @@ export class Faucet {
     return result;
   }
 
+  // credit amount from token manager accesses environment variables
+  private creditAmount(amount: number, denom: string, factor: number = 1): Coin {
+    const value = new Uint53(amount * factor);
+    return {
+      amount: value.toString(),
+      denom: denom,
+    };
+  }
+
   public async credit(recipient: string, denom: string): Promise<CreditResponse> {
     const sender = this.address;
-    const amount = this.tokenManager.creditAmount(denom);
+    const amount = this.creditAmount(this.amountGiven, denom);
     const job: SendJob = {
       sender,
       recipient,
