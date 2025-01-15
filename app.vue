@@ -75,7 +75,7 @@ export default {
 
 <style scoped>
 .vapp-background {
-  background: url('./assets/img/landing_bg.png') no-repeat center center;
+  background: url('./assets/img/bg4.png') no-repeat center center;
   background-size: cover;
   font-family: 'Nunito', sans-serif;
 }

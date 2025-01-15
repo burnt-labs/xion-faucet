@@ -95,15 +95,24 @@ export default defineEventHandler(async (event) => {
         );
 
         if (!matchingDenom) {
-            throw new HttpError(`Available tokens from ${faucet.address} are: ${availableTokens}`, 422);
+            throw new HttpError(`There are no ${denom} tokens available from ${faucet.address}`, 422);
         }
 
         // Failure will throe
         const result = await faucet.credit(address, matchingDenom);
+        const convertedAmount = {
+            amount: (parseInt(result.amount.amount) / 1000000).toString(),
+            denom: result.amount.denom.startsWith('u') ? result.amount.denom.slice(1) : result.amount.denom
+        };
+
+        const resultMod = {
+            ...result,
+            convertedAmount
+        };
 
         await kvStore.put(address, new Date().toISOString(), { expirationTtl: cooldownTime });
 
-        return new Response(JSON.stringify(result), {
+        return new Response(JSON.stringify(resultMod), {
             status: 200,
             headers: { "Content-Type": "application/json" }
         });

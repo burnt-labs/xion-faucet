@@ -32,10 +32,11 @@ NUXT_PUBLIC_FAUCET_COOLDOWN_TIME = "86400"
 NUXT_PUBLIC_FAUCET_DENOM = "uxion"
 NUXT_PUBLIC_FAUCET_GAS_LIMIT = "200000"
 NUXT_PUBLIC_FAUCET_GAS_PRICE = "0.001uxion"
-NUXT_PUBLIC_FAUCET_LOGGING = "true"
+NUXT_PUBLIC_FAUCET_LOGGING = "false"
 NUXT_PUBLIC_FAUCET_MEMO = "Faucet Transaction"
 NUXT_PUBLIC_FAUCET_RPC_URL = "https://xion-testnet-rpc.polkachu.com"
 NUXT_PUBLIC_FAUCET_TOKENS = "uxion"
+NUXT_PUBLIC_SEND_IMAGE = "/assets/img/shadowy.gif"
 
 # Bind the Workers AI model catalog. Run machine learning models, powered by serverless GPUs, on Cloudflare’s global network
 # Docs: https://developers.cloudflare.com/pages/functions/bindings/#workers-ai

@@ -1,76 +1,78 @@
 <template>
-	<div>
-		<div class="bg-dark-opacity">
-			<!-- Step 1: Add your Xion Testnet Address -->
-			<div class="text-center">
-				<h2>Add your Xion Address</h2>
-				<div class="tooltip top">
-					<span class="tooltip-text">
-						Please enter your Xion wallet address which we'll use to transfer your testnet tokens.<br />
-						It should begin with "xion1".
-					</span>
-				</div>
-				<div class="txt-details">
-					<p>
-						If you’re a developer aiming to test the functionality of the Xion network or set up a node on
-						testnet, you can obtain XION testnet tokens using this faucet.
-					</p>
-				</div>
-				<v-form ref="form" v-model="isValid">
-					<v-col cols="12">
-						<v-card class="mb-12 col-auto" color="lighten-1">
-							<v-text-field v-model="walletAddress" autocomplete="wallet-address"
-								label="Xion Wallet Address" :hint="`Example: ${faucetAddress}`" required class="col-12"
-								:rules="addressRules" />
-						</v-card>
-					</v-col>
-				</v-form>
-
-				<!-- Step 2: Verification Challenge -->
-				<v-form @submit.prevent="submitForm">
-					<NuxtTurnstile ref="turnstile" v-model="verificationToken" data-refresh-timeout="manual" />
-					<v-btn type="submit" class="btn btn-primary d-block mx-auto" :disabled="isButtonDisabled">
-						{{ isLoading ? 'Loading...' : 'Continue' }}
-					</v-btn>
-				</v-form>
-			</div>
-		</div>
-
-		<v-alert icon="mdi-shield-lock-outline" prominent dismissible text type="info" v-model="errorNonExistingAddress"
-			transition="scale-transition" class="mt-3" outlined>
-			<b>Address is not in the expected format for this chain or does not exist.</b>
-		</v-alert>
-		<v-alert icon="mdi-shield-lock-outline" prominent dismissible text type="warning" v-model="errorRecaptcha"
-			transition="scale-transition" class="mt-3" outlined>
-			<b>You haven't passed the reCaptcha Verification challenge yet.</b>
-		</v-alert>
-		<v-alert icon="mdi-alert-circle-outline" prominent dismissible text type="error" v-if="hasError"
-			transition="scale-transition" class="mt-3" outlined>
-			<b>An error occurred: {{ errorMessage }} (Status Code: {{ statusCode }})</b>
-		</v-alert>
-		<v-alert icon="mdi-check-circle-outline" prominent dismissible text type="success" v-model="isSuccess"
-			transition="scale-transition" class="mt-3" outlined>
-			<b>Done! Your requested tokens should have arrived at your provided address ({{ faucetAmountGiven }} {{
-				faucetDenom }}).</b>
-		</v-alert>
-
-		<!-- Reset Button -->
-		<v-btn v-if="isSuccess" @click="resetAllForms" class="btn btn-secondary d-block mx-auto mt-4">
-			Reset
-		</v-btn>
+	<div v-if="isLoading" class="loading-overlay">
+		<h2>Sending...</h2>
+		<v-img src="./assets/img/shadowy.gif" class="loading-image" />
 	</div>
+	<!-- Step 1: Add your Xion Testnet Address -->
+	<div v-else class="bg-dark-opacity">
+		<div class="text-center">
+			<h2>Add your Xion Address</h2>
+			<div class="tooltip top">
+				<span class="tooltip-text">
+					Please enter your Xion wallet address which we'll use to transfer your testnet tokens.<br />
+					It should begin with "xion1".
+				</span>
+			</div>
+			<div class="txt-details">
+				<p>
+					If you’re a developer aiming to test the functionality of the Xion network or set up a node on
+					testnet, you can obtain XION testnet tokens using this faucet.
+				</p>
+			</div>
+			<v-form ref="form" v-model="isValid">
+				<v-col cols="12">
+					<v-card class="mb-12 col-auto" color="lighten-1">
+						<v-text-field v-model="walletAddress" autocomplete="wallet-address" label="Xion Wallet Address"
+							:hint="`Example: ${$config.public.faucet.address}`" required class="col-12"
+							:rules="addressRules" />
+					</v-card>
+				</v-col>
+			</v-form>
+
+			<!-- Step 2: Verification Challenge -->
+			<v-form @submit.prevent="submitForm">
+				<NuxtTurnstile ref="turnstile" v-model="verificationToken" data-refresh-timeout="manual" />
+				<v-btn v-if="!isSuccess" type="submit" class="btn btn-primary d-block mx-auto"
+					:disabled="isButtonDisabled">
+					{{ isLoading ? 'Loading...' : 'Continue' }}
+				</v-btn>
+				<v-btn v-else @click="resetAllForms" class="btn btn-secondary d-block mx-auto mt-4">
+					Reset
+				</v-btn>
+			</v-form>
+		</div>
+	</div>
+
+	<v-alert icon="mdi-shield-lock-outline" prominent dismissible type="info" v-model="errorNonExistingAddress"
+		transition="scale-transition" class="mt-3" outlined>
+		<b>Address is not in the expected format for this chain or does not exist.</b>
+	</v-alert>
+	<v-alert icon="mdi-shield-lock-outline" prominent dismissible type="warning" v-model="errorRecaptcha"
+		transition="scale-transition" class="mt-3" outlined>
+		<b>You haven't passed the reCaptcha Verification challenge yet.</b>
+	</v-alert>
+	<v-alert icon="mdi-alert-circle-outline" prominent dismissible type="error" v-if="hasError"
+		transition="scale-transition" class="mt-3" outlined>
+		<b>An error occurred: {{ errorMessage }} (Status Code: {{ statusCode }})</b>
+	</v-alert>
+	<v-alert icon="mdi-check-circle-outline" prominent dismissible type="success" v-model="isSuccess"
+		transition="scale-transition" class="mt-3" outlined>
+		<b>Success! Your {{ recievedAmount }} {{ recievedDenom }} have been delivered to the address: &nbsp;
+			<a :href="`https://explorer.testnet.burnt.com/xion-testnet-1/account/${walletAddress}`" target="_blank">
+				{{ walletAddress }}
+			</a>
+		</b>
+	</v-alert>
 </template>
 
-<script>
-const faucetDenom = process.env.NUXT_PUBLIC_FAUCET_DENOM || 'uxion';
-const faucetAmountGiven = process.env.NUXT_PUBLIC_FAUCET_AMOUNT_GIVEN || 2000000;
-const faucetAddress = process.env.NUXT_PUBLIC_FAUCET_ADDRESS || 'xion14yy92ae8eq0q3ezy9nasumt65hwdgryvpkf0a4';
+
+<script lang="ts">
 
 export default {
 	data() {
 		return {
 			isLoading: false,
-			verificationToken: null,
+			verificationToken: '',
 			walletAddress: '',
 			hasError: false,
 			isSuccess: false,
@@ -78,11 +80,20 @@ export default {
 			statusCode: null,
 			errorNonExistingAddress: false,
 			errorRecaptcha: false,
+			errorMessage: '',
+			recievedAmount: this.$config.public.faucet.amountGiven,
+			recievedDenom: this.$config.public.faucet.denom,
+			imageExists: false,
 			addressRules: [
-				value => !!value || `Required.\n Example: ${faucetAddress}`,
-				value => /^(xion)1[a-z0-9]{38,64}$/.test(value) || 'Invalid xion address format.',
+				(value: unknown) => !!value || `Required.\n Example: ${this.$config.public.faucet.address}`,
+				(value: string) => /^(xion)1[a-z0-9]{38,64}$/.test(value) || 'Invalid xion address format.',
 			],
+
+
 		};
+	},
+	mounted() {
+		this.checkImageExists(this.$config.public.sendImage);
 	},
 	computed: {
 		isButtonDisabled() {
@@ -90,9 +101,19 @@ export default {
 		}
 	},
 	methods: {
+		checkImageExists(url: string) {
+			const img = new Image();
+			img.onload = () => {
+				this.imageExists = true;
+			};
+			img.onerror = () => {
+				this.imageExists = false;
+			};
+			img.src = url;
+		},
 		resetForm() {
 			this.isLoading = false;
-			this.verificationToken = null;
+			this.verificationToken = '';
 			this.$refs.turnstile?.reset();
 		},
 		resetAllForms() {
@@ -100,9 +121,11 @@ export default {
 			this.walletAddress = '';
 			this.isLoading = false;
 			this.isSuccess = false;
+			this.recievedAmount = this.$config.public.faucet.amountGiven;
+			this.recievedDenom = this.$config.public.faucet.denom;
 			this.resetForm();
 		},
-		async throwError(message, status, interval = 10000) {
+		async throwError(message: any, status: null, interval = 10000) {
 			this.hasError = true;
 			this.statusCode = status;
 			this.errorMessage = message;
@@ -120,6 +143,13 @@ export default {
 			if (response.status !== 200 || result.code !== 0) {
 				return this.throwError(result.message, result.status);
 			}
+			if (result.convertedAmount) {
+				this.recievedAmount = result.convertedAmount.amount;
+				this.recievedDenom = result.convertedAmount.denom;
+			} else if (result.amount) {
+				this.recievedAmount = result.amount;
+				this.recievedDenom = result.denom;
+			}
 			this.isSuccess = true;
 			this.isLoading = false;
 			this.resetForm();
@@ -132,8 +162,8 @@ export default {
 				},
 				body: JSON.stringify({
 					token: this.verificationToken,
-					denom: faucetDenom,
-					address: this.walletAddress || faucetAddress,
+					denom: this.$config.public.faucet.denom,
+					address: this.walletAddress || this.$config.public.faucet.address,
 				}),
 			});
 		},
@@ -147,9 +177,28 @@ export default {
 	width: 304px;
 }
 
-.bg-dark-opacity {
-	background: rgba(48, 48, 48, 0.9) !important;
+.loading-overlay {
+	width: 100%;
 	max-width: 700px;
+	height: 85%;
+	background: rgba(48, 48, 48, 0.9);
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	align-items: center;
+	z-index: 9999;
+	padding: 20px;
+	border-radius: 8px;
+}
+
+.loading-image {
+	width: 100%;
+	height: auto;
+}
+
+.bg-dark-opacity {
+	max-width: 700px;
+	background: rgba(48, 48, 48, 0.9) !important;
 	margin: 0 auto;
 	padding: 20px;
 	border-radius: 8px;
@@ -205,12 +254,20 @@ export default {
 }
 
 @media only screen and (max-width: 992px) {
+	.loading-overlay {
+		width: 85%;
+	}
+
 	.bg-dark-opacity {
 		width: 85%;
 	}
 }
 
 @media only screen and (max-width: 576px) {
+	.loading-overlay {
+		width: 100%;
+	}
+
 	.bg-dark-opacity {
 		width: 100%;
 	}

@@ -10,6 +10,7 @@ declare module 'nuxt/schema' {
         };
     }
     interface PublicRuntimeConfig {
+        sendImage: string;
         faucet: FaucetConfig;
         turnstile: {
             siteKey: string;
