@@ -72,7 +72,7 @@ export default defineEventHandler(async (event) => {
         }
 
         const entry = await kvStore.get(address);
-        if (entry !== null && address !== faucetAddress) {
+        if (entry !== null) {
             const entryDate = new Date(entry);
             const currentDate = new Date();
             const cooldownEnd = new Date(entryDate.getTime() + cooldownTime * 1000);
@@ -110,7 +110,9 @@ export default defineEventHandler(async (event) => {
             convertedAmount
         };
 
-        await kvStore.put(address, new Date().toISOString(), { expirationTtl: cooldownTime });
+        if (address !== faucetAddress) {
+            await kvStore.put(address, new Date().toISOString(), { expirationTtl: cooldownTime });
+        }
 
         return new Response(JSON.stringify(resultMod), {
             status: 200,

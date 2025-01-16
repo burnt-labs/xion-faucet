@@ -41,31 +41,31 @@
 			</v-form>
 		</div>
 	</div>
-
-	<v-alert icon="mdi-shield-lock-outline" prominent dismissible type="info" v-model="errorNonExistingAddress"
-		transition="scale-transition" class="mt-3" outlined>
-		<b>Address is not in the expected format for this chain or does not exist.</b>
-	</v-alert>
-	<v-alert icon="mdi-shield-lock-outline" prominent dismissible type="warning" v-model="errorRecaptcha"
-		transition="scale-transition" class="mt-3" outlined>
-		<b>You haven't passed the reCaptcha Verification challenge yet.</b>
-	</v-alert>
-	<v-alert icon="mdi-alert-circle-outline" prominent dismissible type="error" v-if="hasError"
-		transition="scale-transition" class="mt-3" outlined>
-		<b>An error occurred: {{ errorMessage }} (Status Code: {{ statusCode }})</b>
-	</v-alert>
-	<v-alert icon="mdi-alert-circle-outline" prominent dismissible type="info" v-if="isLoading"
-		transition="scale-transition" class="mt-3" outlined>
-		<b>Sending Tokens...</b>
-	</v-alert>
-	<v-alert icon="mdi-check-circle-outline" prominent dismissible type="success" v-model="isSuccess"
-		transition="scale-transition" class="mt-3" outlined>
-		<b>Success! Your {{ recievedAmount }} {{ recievedDenom }} have been delivered to the address: &nbsp;
+	<div>
+		<v-alert shaped dismissible icon="mdi-shield-lock-outline" type="info" transition="scale-transition"
+			v-model="errorNonExistingAddress" class="mt-1">
+			Address is not in the expected format for this chain or does not exist.
+		</v-alert>
+		<v-alert shaped dismissible icon="mdi-shield-lock-outline" type="warning" transition="scale-transition"
+			v-model="errorRecaptcha" class="mt-1">
+			You haven't passed the reCaptcha Verification challenge yet.
+		</v-alert>
+		<v-alert shaped dismissible icon="mdi-alert-circle-outline" type="error" transition="scale-transition"
+			v-model="hasError" class="mt-1">
+			An error occurred: {{ errorMessage }} (Status Code: {{ statusCode }})
+		</v-alert>
+		<v-alert shaped dismissible icon="mdi-alert-circle-outline" type="info" transition="scale-transition"
+			v-model="isLoading" class="mt-1">
+			Sending Tokens...
+		</v-alert>
+		<v-alert shaped dismissible icon="mdi-check-circle-outline" type="success" transition="scale-transition"
+			v-model="isSuccess" class="mt-1">
+			Success! Your {{ recievedAmount }} {{ recievedDenom }} have been delivered to the address: &nbsp;
 			<a :href="`https://explorer.testnet.burnt.com/xion-testnet-1/account/${walletAddress}`" target="_blank">
 				{{ walletAddress }}
 			</a>
-		</b>
-	</v-alert>
+		</v-alert>
+	</div>
 </template>
 
 
@@ -181,15 +181,18 @@ export default {
 }
 
 .loading-overlay {
+	top: 0;
 	width: 100%;
-	max-width: 528px;
-	height: 85%;
+	height: 100%;
+	max-height: 500px;
 	background: rgba(0, 0, 0, 0.4);
 	display: flex;
 	flex-direction: column;
-	justify-content: center;
+	justify-content: flex-start;
 	align-items: center;
 	z-index: 9999;
+	padding-top: 20px;
+	/* Adjust this value as needed */
 }
 
 .loading-image {
