@@ -1,6 +1,5 @@
 <template>
 	<div v-if="isLoading" class="loading-overlay">
-		<h2>Sending...</h2>
 		<v-img src="./assets/img/shadowy.gif" class="loading-image" />
 	</div>
 	<!-- Step 1: Add your Xion Testnet Address -->
@@ -54,6 +53,10 @@
 	<v-alert icon="mdi-alert-circle-outline" prominent dismissible type="error" v-if="hasError"
 		transition="scale-transition" class="mt-3" outlined>
 		<b>An error occurred: {{ errorMessage }} (Status Code: {{ statusCode }})</b>
+	</v-alert>
+	<v-alert icon="mdi-alert-circle-outline" prominent dismissible type="info" v-if="isLoading"
+		transition="scale-transition" class="mt-3" outlined>
+		<b>Sending Tokens...</b>
 	</v-alert>
 	<v-alert icon="mdi-check-circle-outline" prominent dismissible type="success" v-model="isSuccess"
 		transition="scale-transition" class="mt-3" outlined>
@@ -179,21 +182,20 @@ export default {
 
 .loading-overlay {
 	width: 100%;
-	max-width: 700px;
+	max-width: 528px;
 	height: 85%;
-	background: rgba(48, 48, 48, 0.9);
+	background: rgba(0, 0, 0, 0.4);
 	display: flex;
 	flex-direction: column;
 	justify-content: center;
 	align-items: center;
 	z-index: 9999;
-	padding: 20px;
-	border-radius: 8px;
 }
 
 .loading-image {
 	width: 100%;
-	height: auto;
+	height: 100%;
+	object-fit: cover;
 }
 
 .bg-dark-opacity {

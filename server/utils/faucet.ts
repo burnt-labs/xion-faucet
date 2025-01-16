@@ -4,17 +4,14 @@ import {
   calculateFee,
   DeliverTxResponse,
   SigningStargateClient,
-  StargateClient,
 } from "@cosmjs/stargate";
-import { isDefined } from "@cosmjs/utils";
 import { logSendJob } from "@cosmjs/faucet/build/debugging";
-import { makePathBuilder } from "@cosmjs/faucet/build/pathbuilder";
 import type { SendJob } from "@cosmjs/faucet/build/types";
 import { parseBankTokens } from "@cosmjs/faucet/build/tokens";
-import { Coin, Secp256k1HdWallet } from "@cosmjs/amino";
-import { OfflineSigner } from "@cosmjs/proto-signing";
+import { Coin } from "@cosmjs/amino";
 import { FaucetConfig } from "nuxt/schema";
 import { Uint53 } from "@cosmjs/math";
+import { getAvailableTokens } from "./utils";
 
 export interface CreditResponse {
   sender: string;
@@ -32,29 +29,6 @@ export const getFaucet = async (config: FaucetConfig, mnemonic: string, pathPatt
   const faucetAddress = faucetAccount.address;
   const client = await SigningStargateClient.connectWithSigner(rpcUrl, wallet);
   return new Faucet(config, client, faucetAddress)
-}
-
-export async function getWallet(mnemonic: string, pathPattern: string, addressPrefix: string, accountId: number): Promise<OfflineSigner> {
-  // Construct the derivation path for the given account ID
-  const pathBuilder = makePathBuilder(pathPattern);
-  const derivationPath = pathBuilder(accountId)
-
-  // Create a wallet instance using the Secp256k1HdWallet or other appropriate class
-  const account = await Secp256k1HdWallet.fromMnemonic(mnemonic, {
-    hdPaths: [derivationPath],
-    prefix: addressPrefix,
-  });
-
-  // Return the address of the specified account
-  return account
-}
-
-export const getAvailableTokens = async (client: StargateClient, address: string, bankTokens: string[]): Promise<string[]> => {
-  const balance = await client.getAllBalances(address);
-  return balance
-    .filter((b) => b.amount !== "0")
-    .map((b) => bankTokens.find((token) => token === b.denom))
-    .filter(isDefined);
 }
 
 export class Faucet {

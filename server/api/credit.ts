@@ -1,5 +1,5 @@
 import { getFaucet } from '../utils/faucet';
-import { isValidAddress } from "@cosmjs/faucet/build/addresses";
+import { isValidAddress } from "../utils/utils";
 import { HttpError as CosmjsHttpError } from "@cosmjs/faucet/build/api/httperror";
 
 export interface CreditRequestBody {
@@ -38,7 +38,7 @@ export default defineEventHandler(async (event) => {
         const runtimeConfig = useRuntimeConfig(event);
         const faucetConfig = runtimeConfig.public.faucet;
         const { mnemonic, pathPattern } = runtimeConfig.faucet;
-        const { addressPrefix, cooldownTime } = faucetConfig
+        const { addressPrefix, cooldownTime, address: faucetAddress } = faucetConfig
         const request = event.context.cloudflare.request;
 
         if (request.method !== "POST") {
@@ -72,7 +72,7 @@ export default defineEventHandler(async (event) => {
         }
 
         const entry = await kvStore.get(address);
-        if (entry !== null) {
+        if (entry !== null && address !== faucetAddress) {
             const entryDate = new Date(entry);
             const currentDate = new Date();
             const cooldownEnd = new Date(entryDate.getTime() + cooldownTime * 1000);

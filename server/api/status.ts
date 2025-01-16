@@ -1,5 +1,5 @@
 import { StargateClient } from '@cosmjs/stargate';
-import { getAvailableTokens, getWallet } from '../utils/faucet';
+import { getAvailableTokens, getWallet } from '../utils/utils';
 import { parseBankTokens } from '@cosmjs/faucet/build/tokens';
 
 export interface StatusResponse {
