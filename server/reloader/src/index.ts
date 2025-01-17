@@ -1,13 +1,13 @@
-import { StargateClient, GasPrice, calculateFee, assertIsDeliverTxSuccess, StdFee, SigningStargateClient } from "@cosmjs/stargate";
+import { StargateClient, calculateFee, assertIsDeliverTxSuccess, StdFee, SigningStargateClient } from "@cosmjs/stargate";
 import { getAvailableTokens, getSigningClient, loadAccounts, createWallets } from "./utils"
+import { debugAccount, logSendJob } from "@cosmjs/faucet/build/debugging";
 import { makePathBuilder } from "@cosmjs/faucet/build/pathbuilder";
 import { parseBankTokens } from "@cosmjs/faucet/build/tokens";
 import { MinimalAccount } from "@cosmjs/faucet/build/types";
-import { debugAccount, logSendJob } from "@cosmjs/faucet/build/debugging";
 import { TokenManager } from "@cosmjs/faucet/build/tokenmanager";
 
 export default {
-	async fetch(request: Request, env: Env): Promise<Response> {
+	async scheduled(request: Request, env: Env): Promise<void> {
 		try {
 			const rpcUrl = env.FAUCET_RPC_URL;
 			const tokens = env.FAUCET_TOKENS;
