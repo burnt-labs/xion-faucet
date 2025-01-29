@@ -5,6 +5,12 @@ declare module 'nuxt/schema' {
             pathPattern: string;
             kvStore: KVNamespace;
         };
+        "xion-testnet-1": {
+            mnemonic: string;
+        };
+        "xion-testnet-2": {
+            mnemonic: string;
+        };
         turnstile: {
             secretKey: string;
         };

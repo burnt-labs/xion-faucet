@@ -31,11 +31,15 @@ export default defineEventHandler(async (event) => {
 			faucetConfig.address = chainConfig.address;
 		}
 
-		const { mnemonic, pathPattern } = runtimeConfig.faucet;
 		const { addressPrefix, rpcUrl, tokens } = faucetConfig
 		const chainTokens = parseBankTokens(tokens);
 
 		//console.log(`Fetching status for faucet at ${rpcUrl}`);
+		const pathPattern = runtimeConfig.faucet.pathPattern;
+		let mnemonic = runtimeConfig.faucet.mnemonic;
+		if (chainIdParam && runtimeConfig[chainIdParam] && runtimeConfig[chainIdParam].mnemonic) {
+			mnemonic = runtimeConfig[chainIdParam].mnemonic;
+		}
 		const [client, wallet] = await Promise.all([
 			StargateClient.connect(rpcUrl),
 			getWallet(mnemonic, pathPattern, addressPrefix, 0)

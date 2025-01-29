@@ -28,6 +28,12 @@ export default defineNuxtConfig({
     turnstile: {
       secretKey: process.env.NUXT_TURNSTILE_SECRET_KEY as string,
     },
+    "xion-testnet-1": {
+      mnemonic: process.env.NUXT_XION_TESTNET_1_MNEMONIC as string,
+    },
+    "xion-testnet-2": {
+      mnemonic: process.env.NUXT_XION_TESTNET_2_MNEMONIC as string,
+    },
     public: {
       faucet: {
         address: process.env.NUXT_PUBLIC_XION_TESTNET_2_ADDRESS as string,

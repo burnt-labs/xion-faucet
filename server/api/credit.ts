@@ -51,7 +51,6 @@ export default defineEventHandler(async (event) => {
             faucetConfig.address = chainConfig.address;
         }
 
-        const { mnemonic, pathPattern } = runtimeConfig.faucet;
         const { addressPrefix, cooldownTime, address: faucetAddress } = faucetConfig
         const request = event.context.cloudflare.request;
 
@@ -101,6 +100,11 @@ export default defineEventHandler(async (event) => {
             throw new HttpError(`Too many requests for the same address. Blocked to prevent draining. Please wait ${humanReadableTime} and try again!`, 405);
         }
 
+        const pathPattern = runtimeConfig.faucet.pathPattern;
+        let mnemonic = runtimeConfig.faucet.mnemonic;
+        if (chainIdParam && runtimeConfig[chainIdParam] && runtimeConfig[chainIdParam].mnemonic) {
+            mnemonic = runtimeConfig[chainIdParam].mnemonic;
+        }
         const accountId = await getAcoountId(kvStore);
         const faucet = await getFaucet(faucetConfig, mnemonic, pathPattern, accountId);
         const availableTokens = await faucet.availableTokens()
