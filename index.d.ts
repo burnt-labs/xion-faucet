@@ -12,6 +12,8 @@ declare module 'nuxt/schema' {
     interface PublicRuntimeConfig {
         sendImage: string;
         faucet: FaucetConfig;
+        "xion-testnet-1": ChainConfig;
+        "xion-testnet-2": ChainConfig;
         turnstile: {
             siteKey: string;
         };
@@ -28,6 +30,11 @@ declare module 'nuxt/schema' {
         memo: string;
         rpcUrl: string;
         tokens: string;
+    }
+
+    interface ChainConfig {
+        address: string;
+        rpcUrl: string;
     }
 }
 

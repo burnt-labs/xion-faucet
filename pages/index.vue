@@ -103,6 +103,12 @@ export default {
 			return this.isLoading || !this.isValid || !this.verificationToken || !this.walletAddress;
 		}
 	},
+	props: {
+		selected: {
+			type: String,
+			required: true,
+		},
+	},
 	methods: {
 		checkImageExists(url: string) {
 			const img = new Image();
@@ -158,7 +164,7 @@ export default {
 			this.resetForm();
 		},
 		async fetchApiCredit() {
-			return $fetch.native(`/api/credit`, {
+			return $fetch.native(`/api/credit?chainId=${this.selected}`, {
 				method: 'POST',
 				headers: {
 					'Content-Type': 'application/json',
@@ -166,7 +172,7 @@ export default {
 				body: JSON.stringify({
 					token: this.verificationToken,
 					denom: this.$config.public.faucet.denom,
-					address: this.walletAddress || this.$config.public.faucet.address,
+					address: this.walletAddress || this.$config.public[this.selected].address,
 				}),
 			});
 		},
