@@ -7,7 +7,7 @@ import { MinimalAccount } from "@cosmjs/faucet/build/types";
 import { TokenManager } from "@cosmjs/faucet/build/tokenmanager";
 
 export default {
-	async scheduled(request: Request, env: Env): Promise<void> {
+	async scheduled(request: Request, env: Env): Promise<Response> {
 		try {
 			const rpcUrl = env.FAUCET_RPC_URL;
 			const tokens = env.FAUCET_TOKENS;

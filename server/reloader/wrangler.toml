@@ -25,7 +25,7 @@ enabled = true
 # - https://developers.cloudflare.com/workers/wrangler/configuration/#environment-variables
 # Note: Use secrets to store sensitive data.
 # - https://developers.cloudflare.com/workers/configuration/secrets/
-[vars]
+[env.xion-testnet-1.vars]
 FAUCET_ADDRESS_PREFIX = "xion"
 FAUCET_MEMO = "Faucet transaction"
 FAUCET_GAS_PRICE = "0.001uxion"
@@ -35,6 +35,17 @@ FAUCET_PATH_PATTERN = "m/44'/118'/0'/0/a"
 FAUCET_TOKENS = "uxion"
 FAUCET_COOLDOWN_TIME = "86400"
 FAUCET_RPC_URL = "https://xion-testnet-rpc.polkachu.com"
+
+[env.xion-testnet-2.vars]
+FAUCET_ADDRESS_PREFIX = "xion"
+FAUCET_MEMO = "Faucet transaction"
+FAUCET_GAS_PRICE = "0.001uxion"
+FAUCET_GAS_LIMIT = "100000"
+FAUCET_NUM_ACCOUNTS = "20"
+FAUCET_PATH_PATTERN = "m/44'/118'/0'/0/a"
+FAUCET_TOKENS = "uxion"
+FAUCET_COOLDOWN_TIME = "86400"
+FAUCET_RPC_URL = "https://rpc.xion-testnet-2.burnt.com"
 
 # Bind the Workers AI model catalog. Run machine learning models, powered by serverless GPUs, on Cloudflare’s global network
 # Docs: https://developers.cloudflare.com/workers/wrangler/configuration/#workers-ai
