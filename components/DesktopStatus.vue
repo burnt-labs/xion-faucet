@@ -1,7 +1,6 @@
 <template>
   <div class="desktop-status">
-    <v-select class="select-chain mr-3" :value="selected" :items="items" outlined
-      @input="$emit('update:selected', $event)"></v-select>
+    <v-select class="select-chain mr-3" v-model="selectedValue" :items="items" outlined></v-select>
     <div class="faucet-status">
       <h4 class="status-title">
         Faucet Status:
@@ -30,6 +29,19 @@ export default {
     items: Array,
     selected: String,
   },
+  data() {
+    return {
+      selectedValue: this.selected
+    };
+  },
+  watch: {
+    selected(newValue) {
+      this.selectedValue = newValue;
+    },
+    selectedValue(newValue) {
+      this.$emit('update:selected', newValue);
+    }
+  }
 };
 </script>
 
