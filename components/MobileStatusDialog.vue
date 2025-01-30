@@ -3,7 +3,7 @@
     <v-dialog v-model="dialog" width="auto">
       <!-- Use a more straightforward approach for the activator -->
       <template v-slot:activator="{ props }">
-        <v-btn v-bind="props" icon :color="statusColor" @click="toggleDialog">
+        <v-btn v-bind="props" icon :color="statusColor">
           <v-icon>mdi-information-outline</v-icon>
         </v-btn>
       </template>
@@ -52,11 +52,6 @@ export default {
       dialog: false,
       selectedValue: this.selected
     };
-  },
-  methods: {
-    toggleDialog() {
-      this.dialog = !this.dialog;
-    }
   },
   watch: {
     selected(newValue) {
