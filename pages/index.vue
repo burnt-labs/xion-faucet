@@ -22,8 +22,10 @@
 				<v-col cols="12">
 					<v-card class="mb-12 col-auto" color="lighten-1">
 						<v-text-field v-model="walletAddress" autocomplete="wallet-address" label="Xion Wallet Address"
-							:hint="`Example: ${$config.public.faucet.address}`" required class="col-12"
-							:rules="addressRules" />
+							:hint="`Example: ${$config.public.faucet.address}`" required class="col-12" :rules="[
+								(value: string) => !!value || `Required.\n Example: ${$config.public[selected]?.address}`,
+								(value: string) => /^(xion)1[a-z0-9]{38,64}$/.test(value) || 'Invalid xion address format.',
+							]" />
 					</v-card>
 				</v-col>
 			</v-form>
@@ -87,10 +89,7 @@ export default {
 			recievedAmount: this.$config.public.faucet.amountGiven,
 			recievedDenom: this.$config.public.faucet.denom,
 			imageExists: false,
-			addressRules: [
-				(value: unknown) => !!value || `Required.\n Example: ${this.$config.public.faucet.address}`,
-				(value: string) => /^(xion)1[a-z0-9]{38,64}$/.test(value) || 'Invalid xion address format.',
-			],
+
 
 
 		};
