@@ -35,23 +35,6 @@ const getAcoountId = async (kvStore: KVNamespace): Promise<number> => {
 //export const onRequest: PagesFunction<Env> = async (context): Promise<Response> => {
 export default defineEventHandler(async (event) => {
     try {
-        const kvStore = event.context.cloudflare.env.NUXT_FAUCET_KV
-        const runtimeConfig = useRuntimeConfig(event);
-        const faucetConfig = runtimeConfig.public.faucet;
-
-        const url = new URL(event.context.cloudflare.request.url);
-        const chainIdParam = url.searchParams.get("chainId");
-        if (chainIdParam) {
-
-            const chainConfig = runtimeConfig.public[chainIdParam] as unknown as ChainConfig;
-            if (!chainConfig || !chainConfig.rpcUrl || !chainConfig.address) {
-                throw new HttpError(`Configuration for chainIdParam ${chainIdParam} is missing or incomplete`, 400);
-            }
-            faucetConfig.rpcUrl = chainConfig.rpcUrl;
-            faucetConfig.address = chainConfig.address;
-        }
-
-        const { addressPrefix, cooldownTime, address: faucetAddress } = faucetConfig
         const request = event.context.cloudflare.request;
 
         if (request.method !== "POST") {
@@ -80,11 +63,29 @@ export default defineEventHandler(async (event) => {
             })
         }
 
+        const runtimeConfig = useRuntimeConfig(event);
+        const faucetConfig = runtimeConfig.public.faucet;
+
+        const url = new URL(request.url);
+        const chainIdParam = url.searchParams.get("chainId");
+        if (chainIdParam) {
+
+            const chainConfig = runtimeConfig.public[chainIdParam] as unknown as ChainConfig;
+            if (!chainConfig || !chainConfig.rpcUrl || !chainConfig.address) {
+                throw new HttpError(`Configuration for chainIdParam ${chainIdParam} is missing or incomplete`, 400);
+            }
+            faucetConfig.rpcUrl = chainConfig.rpcUrl;
+            faucetConfig.address = chainConfig.address;
+        }
+
+        const { addressPrefix, cooldownTime } = faucetConfig
+
         if (!isValidAddress(address, addressPrefix)) {
             throw new HttpError("Address is not in the expected format for this chain.", 400);
         }
 
-        const entry = await kvStore.get(address);
+        const kvStore = event.context.cloudflare.env.NUXT_FAUCET_KV
+        const entry = address !== faucetConfig.address ? await kvStore.get(address) : null;
         if (entry !== null) {
             const entryDate = new Date(entry);
             const currentDate = new Date();
@@ -128,7 +129,7 @@ export default defineEventHandler(async (event) => {
             convertedAmount
         };
 
-        if (address !== faucetAddress) {
+        if (address !== faucetConfig.address) {
             await kvStore.put(address, new Date().toISOString(), { expirationTtl: cooldownTime });
         }
 
