@@ -1,3 +1,4 @@
+import { ChainConfig } from 'nuxt/schema';
 import { getFaucet } from '../utils/faucet';
 import { isValidAddress } from "../utils/utils";
 import { HttpError as CosmjsHttpError } from "@cosmjs/faucet/build/api/httperror";
@@ -37,7 +38,19 @@ export default defineEventHandler(async (event) => {
         const kvStore = event.context.cloudflare.env.NUXT_FAUCET_KV
         const runtimeConfig = useRuntimeConfig(event);
         const faucetConfig = runtimeConfig.public.faucet;
-        const { mnemonic, pathPattern } = runtimeConfig.faucet;
+
+        const url = new URL(event.context.cloudflare.request.url);
+        const chainIdParam = url.searchParams.get("chainId");
+        if (chainIdParam) {
+
+            const chainConfig = runtimeConfig.public[chainIdParam] as unknown as ChainConfig;
+            if (!chainConfig || !chainConfig.rpcUrl || !chainConfig.address) {
+                throw new HttpError(`Configuration for chainIdParam ${chainIdParam} is missing or incomplete`, 400);
+            }
+            faucetConfig.rpcUrl = chainConfig.rpcUrl;
+            faucetConfig.address = chainConfig.address;
+        }
+
         const { addressPrefix, cooldownTime, address: faucetAddress } = faucetConfig
         const request = event.context.cloudflare.request;
 
@@ -87,6 +100,11 @@ export default defineEventHandler(async (event) => {
             throw new HttpError(`Too many requests for the same address. Blocked to prevent draining. Please wait ${humanReadableTime} and try again!`, 405);
         }
 
+        const pathPattern = runtimeConfig.faucet.pathPattern;
+        let mnemonic = runtimeConfig.faucet.mnemonic;
+        if (chainIdParam && runtimeConfig[chainIdParam] && runtimeConfig[chainIdParam].mnemonic) {
+            mnemonic = runtimeConfig[chainIdParam].mnemonic;
+        }
         const accountId = await getAcoountId(kvStore);
         const faucet = await getFaucet(faucetConfig, mnemonic, pathPattern, accountId);
         const availableTokens = await faucet.availableTokens()

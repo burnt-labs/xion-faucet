@@ -61,7 +61,7 @@
 		<v-alert shaped dismissible icon="mdi-check-circle-outline" type="success" transition="scale-transition"
 			v-model="isSuccess" class="mt-1">
 			Success! Your {{ recievedAmount }} {{ recievedDenom }} have been delivered to the address: &nbsp;
-			<a :href="`https://explorer.testnet.burnt.com/xion-testnet-1/account/${walletAddress}`" target="_blank">
+			<a :href="`https://explorer.burnt.com/${selected}/account/${walletAddress}`" target="_blank">
 				{{ walletAddress }}
 			</a>
 		</v-alert>
@@ -102,6 +102,12 @@ export default {
 		isButtonDisabled() {
 			return this.isLoading || !this.isValid || !this.verificationToken || !this.walletAddress;
 		}
+	},
+	props: {
+		selected: {
+			type: String,
+			required: true,
+		},
 	},
 	methods: {
 		checkImageExists(url: string) {
@@ -158,7 +164,7 @@ export default {
 			this.resetForm();
 		},
 		async fetchApiCredit() {
-			return $fetch.native(`/api/credit`, {
+			return $fetch.native(`/api/credit?chainId=${this.selected}`, {
 				method: 'POST',
 				headers: {
 					'Content-Type': 'application/json',
@@ -166,7 +172,7 @@ export default {
 				body: JSON.stringify({
 					token: this.verificationToken,
 					denom: this.$config.public.faucet.denom,
-					address: this.walletAddress || this.$config.public.faucet.address,
+					address: this.walletAddress || this.$config.public[this.selected].address,
 				}),
 			});
 		},

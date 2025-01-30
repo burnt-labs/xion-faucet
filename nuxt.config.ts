@@ -28,9 +28,15 @@ export default defineNuxtConfig({
     turnstile: {
       secretKey: process.env.NUXT_TURNSTILE_SECRET_KEY as string,
     },
+    "xion-testnet-1": {
+      mnemonic: process.env.NUXT_XION_TESTNET_1_MNEMONIC as string,
+    },
+    "xion-testnet-2": {
+      mnemonic: process.env.NUXT_XION_TESTNET_2_MNEMONIC as string,
+    },
     public: {
       faucet: {
-        address: process.env.NUXT_PUBLIC_FAUCET_ADDRESS as string,
+        address: process.env.NUXT_PUBLIC_XION_TESTNET_2_ADDRESS as string,
         addressPrefix: process.env.NUXT_PUBLIC_FAUCET_ADDRESS_PREFIX as string,
         amountGiven: process.env.NUXT_PUBLIC_FAUCET_AMOUNT_GIVEN as unknown as number,
         cooldownTime: process.env.NUXT_PUBLIC_FAUCET_COOLDOWN_TIME as unknown as number,
@@ -39,8 +45,16 @@ export default defineNuxtConfig({
         gasPrice: process.env.NUXT_PUBLIC_FAUCET_GAS_PRICE as string,
         logging: process.env.NUXT_PUBLIC_FAUCET_LOGGING as string,
         memo: process.env.NUXT_PUBLIC_FAUCET_MEMO as string,
-        rpcUrl: process.env.NUXT_PUBLIC_FAUCET_RPC_URL as string,
+        rpcUrl: process.env.NUXT_PUBLIC_XION_TESTNET_2_RPC_URL as string,
         tokens: process.env.NUXT_PUBLIC_FAUCET_TOKENS as string,
+      },
+      "xion-testnet-1": {
+        address: process.env.NUXT_PUBLIC_XION_TESTNET_1_ADDRESS as string,
+        rpcUrl: process.env.NUXT_PUBLIC_XION_TESTNET_1_RPC_URL as string,
+      },
+      "xion-testnet-2": {
+        address: process.env.NUXT_PUBLIC_XION_TESTNET_2_ADDRESS as string,
+        rpcUrl: process.env.NUXT_PUBLIC_XION_TESTNET_2_RPC_URL as string,
       }
     },
   },

@@ -4,7 +4,7 @@
       v-model:selected="selected" />
     <v-main class="main-container">
       <v-container class="main-container">
-        <NuxtPage />
+        <NuxtPage :selected="selected" />
       </v-container>
     </v-main>
     <footer-section />
@@ -39,8 +39,8 @@ export default {
     return {
       faucetStatus: '',
       faucetStatusColor: '',
-      items: ['xion-testnet-1'],
-      selected: 'xion-testnet-1',
+      items: ['xion-testnet-1', "xion-testnet-2"],
+      selected: 'xion-testnet-2',
     };
   },
   mounted() {
@@ -57,7 +57,7 @@ export default {
 
     async updateFaucetStatus() {
       try {
-        const status = await $fetch('/api/status');
+        const status = await $fetch(`/api/status?chainId=${this.selected}`);
         if (status.status === 'ok') {
           this.faucetStatusColor = 'green';
           this.faucetStatus = 'Operational';
