@@ -172,7 +172,7 @@ export default {
 				body: JSON.stringify({
 					token: this.verificationToken,
 					denom: this.$config.public.faucet.denom,
-					address: this.walletAddress || this.$config.public[this.selected].address,
+					address: this.walletAddress
 				}),
 			});
 		},
