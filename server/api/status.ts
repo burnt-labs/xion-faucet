@@ -16,7 +16,6 @@ export interface StatusResponse {
 export default defineEventHandler(async (event) => {
 	try {
 		const runtimeConfig = useRuntimeConfig(event);
-		console.log(runtimeConfig);
 		const faucetConfig = runtimeConfig.public.faucet;
 
 		const url = new URL(event.context.cloudflare.request.url);

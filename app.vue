@@ -43,6 +43,14 @@ export default {
       selected: 'xion-testnet-2',
     };
   },
+  watch: {
+    selected(newValue) {
+      this.updateFaucetStatus();
+    },
+    selectedValue(newValue) {
+      this.$emit('update:selected', newValue);
+    }
+  },
   mounted() {
     this.startFaucetStatusPolling();
   },

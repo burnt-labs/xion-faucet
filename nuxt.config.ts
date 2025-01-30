@@ -38,8 +38,8 @@ export default defineNuxtConfig({
       faucet: {
         address: process.env.NUXT_PUBLIC_XION_TESTNET_2_ADDRESS as string,
         addressPrefix: process.env.NUXT_PUBLIC_FAUCET_ADDRESS_PREFIX as string,
-        amountGiven: process.env.NUXT_PUBLIC_FAUCET_AMOUNT_GIVEN as unknown as number,
-        cooldownTime: process.env.NUXT_PUBLIC_FAUCET_COOLDOWN_TIME as unknown as number,
+        amountGiven: Number(process.env.NUXT_PUBLIC_FAUCET_AMOUNT_GIVEN),
+        cooldownTime: Number(process.env.NUXT_PUBLIC_FAUCET_COOLDOWN_TIME),
         denom: process.env.NUXT_PUBLIC_FAUCET_DENOM as string,
         gasLimit: process.env.NUXT_PUBLIC_FAUCET_GAS_LIMIT as string,
         gasPrice: process.env.NUXT_PUBLIC_FAUCET_GAS_PRICE as string,

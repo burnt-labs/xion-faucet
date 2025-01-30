@@ -2,8 +2,8 @@
   <div class="mobile-status-div">
     <v-dialog v-model="dialog" width="auto">
       <!-- Use a more straightforward approach for the activator -->
-      <template v-slot:activator="{ on }">
-        <v-btn icon :color="statusColor" @click="toggleDialog">
+      <template v-slot:activator="{ props }">
+        <v-btn v-bind="props" icon :color="statusColor">
           <v-icon>mdi-information-outline</v-icon>
         </v-btn>
       </template>
@@ -11,8 +11,7 @@
         <v-card-title class="text-h5 lighten-2"></v-card-title>
         <v-card-text class="mt-2">
           <div class="faucet-comp-status">
-            <v-select class="select-chain mr-3" :value="selected" :items="items" outlined
-              @input="$emit('update:selected', $event)"></v-select>
+            <v-select class="select-chain mr-3" v-model="selectedValue" :items="items" outlined></v-select>
             <h4 class="font-weight-light">
               Faucet Status:
               <span class="status-text-col">
@@ -50,12 +49,16 @@ export default {
   },
   data() {
     return {
-      dialog: false
+      dialog: false,
+      selectedValue: this.selected
     };
   },
-  methods: {
-    toggleDialog() {
-      this.dialog = !this.dialog;
+  watch: {
+    selected(newValue) {
+      this.selectedValue = newValue;
+    },
+    selectedValue(newValue) {
+      this.$emit('update:selected', newValue);
     }
   }
 };
