@@ -61,7 +61,7 @@
 		<v-alert shaped dismissible icon="mdi-check-circle-outline" type="success" transition="scale-transition"
 			v-model="isSuccess" class="mt-1">
 			Success! Your {{ recievedAmount }} {{ recievedDenom }} have been delivered to the address: &nbsp;
-			<a :href="`https://explorer.testnet.burnt.com/xion-testnet-1/account/${walletAddress}`" target="_blank">
+			<a :href="`https://explorer.burnt.com/${selected}/account/${walletAddress}`" target="_blank">
 				{{ walletAddress }}
 			</a>
 		</v-alert>
