@@ -83,9 +83,9 @@ export default defineEventHandler(async (event) => {
         if (!isValidAddress(address, addressPrefix)) {
             throw new HttpError("Address is not in the expected format for this chain.", 400);
         }
-
         const kvStore = event.context.cloudflare.env.NUXT_FAUCET_KV
-        const entry = address !== faucetConfig.address ? await kvStore.get(address) : null;
+        const ipAddress = getRequestIP(event, { xForwardedFor: true });
+        const entry = address !== faucetConfig.address ? await kvStore.get(address) : ipAddress ? await kvStore.get(ipAddress) : null;
         if (entry !== null) {
             const entryDate = new Date(entry);
             const currentDate = new Date();
@@ -98,8 +98,9 @@ export default defineEventHandler(async (event) => {
 
             const humanReadableTime = `${hours}h ${minutes}m ${seconds}s`;
 
-            throw new HttpError(`Too many requests for the same address. Blocked to prevent draining. Please wait ${humanReadableTime} and try again!`, 405);
+            throw new HttpError(`Too many requests for the same address (${entry}). Please wait ${humanReadableTime} and try again!`, 405);
         }
+
 
         const pathPattern = runtimeConfig.faucet.pathPattern;
         let mnemonic = runtimeConfig.faucet.mnemonic;
@@ -131,6 +132,7 @@ export default defineEventHandler(async (event) => {
 
         if (address !== faucetConfig.address) {
             await kvStore.put(address, new Date().toISOString(), { expirationTtl: cooldownTime });
+            if (ipAddress) await kvStore.put(ipAddress, new Date().toISOString(), { expirationTtl: cooldownTime });
         }
 
         return new Response(JSON.stringify(resultMod), {
