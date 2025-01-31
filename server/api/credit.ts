@@ -88,6 +88,7 @@ export default defineEventHandler(async (event) => {
         const ipEntry = ipAddress ? await kvStore.get(ipAddress) : null;
         if (addEntry !== null || ipEntry !== null) {
             const entry = addEntry ? addEntry : ipEntry ? ipEntry : 0;
+            const entryKey = addEntry ? address : ipAddress
             const entryDate = new Date(entry);
             const currentDate = new Date();
             const cooldownEnd = new Date(entryDate.getTime() + cooldownTime * 1000);
@@ -99,7 +100,7 @@ export default defineEventHandler(async (event) => {
 
             const humanReadableTime = `${hours}h ${minutes}m ${seconds}s`;
 
-            throw new HttpError(`Too many requests for the same address. Please wait ${humanReadableTime} and try again!`, 405);
+            throw new HttpError(`Too many requests for the same address (${entryKey}). Please wait ${humanReadableTime} and try again!`, 405);
         }
 
 
