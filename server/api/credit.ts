@@ -35,13 +35,12 @@ const getAcoountId = async (kvStore: KVNamespace): Promise<number> => {
 //export const onRequest: PagesFunction<Env> = async (context): Promise<Response> => {
 export default defineEventHandler(async (event) => {
     try {
-        const request = event.context.cloudflare.request;
 
-        if (request.method !== "POST") {
+        if (event.method !== "POST") {
             throw new HttpError("This endpoint requires a POST request", 405);
         }
 
-        if (request.headers.get("Content-Type") !== "application/json") {
+        if (event.headers.get("Content-Type") !== "application/json") {
             throw new HttpError("Content-type application/json expected", 415);
         }
 
@@ -66,7 +65,7 @@ export default defineEventHandler(async (event) => {
         const runtimeConfig = useRuntimeConfig(event);
         const faucetConfig = runtimeConfig.public.faucet;
 
-        const url = new URL(request.url);
+        const url = getRequestURL(event);
         const chainIdParam = url.searchParams.get("chainId");
         if (chainIdParam) {
 
@@ -83,10 +82,13 @@ export default defineEventHandler(async (event) => {
         if (!isValidAddress(address, addressPrefix)) {
             throw new HttpError("Address is not in the expected format for this chain.", 400);
         }
-
         const kvStore = event.context.cloudflare.env.NUXT_FAUCET_KV
-        const entry = address !== faucetConfig.address ? await kvStore.get(address) : null;
-        if (entry !== null) {
+        const ipAddress = getRequestIP(event, { xForwardedFor: true });
+        const addEntry = address !== faucetConfig.address ? await kvStore.get(address) : null;
+        const ipEntry = ipAddress ? await kvStore.get(ipAddress) : null;
+        if (addEntry !== null || ipEntry !== null) {
+            const entry = addEntry ? addEntry : ipEntry ? ipEntry : 0;
+            const entryKey = addEntry ? address : ipAddress
             const entryDate = new Date(entry);
             const currentDate = new Date();
             const cooldownEnd = new Date(entryDate.getTime() + cooldownTime * 1000);
@@ -98,8 +100,9 @@ export default defineEventHandler(async (event) => {
 
             const humanReadableTime = `${hours}h ${minutes}m ${seconds}s`;
 
-            throw new HttpError(`Too many requests for the same address. Blocked to prevent draining. Please wait ${humanReadableTime} and try again!`, 405);
+            throw new HttpError(`Too many requests for the same address (${entryKey}). Please wait ${humanReadableTime} and try again!`, 405);
         }
+
 
         const pathPattern = runtimeConfig.faucet.pathPattern;
         let mnemonic = runtimeConfig.faucet.mnemonic;
@@ -131,6 +134,7 @@ export default defineEventHandler(async (event) => {
 
         if (address !== faucetConfig.address) {
             await kvStore.put(address, new Date().toISOString(), { expirationTtl: cooldownTime });
+            if (ipAddress) await kvStore.put(ipAddress, new Date().toISOString(), { expirationTtl: cooldownTime });
         }
 
         return new Response(JSON.stringify(resultMod), {
