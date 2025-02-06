@@ -36,8 +36,8 @@ NUXT_PUBLIC_FAUCET_TOKENS = "uxion"
 NUXT_PUBLIC_SEND_IMAGE = "/assets/img/shadowy.gif"
 NUXT_PUBLIC_XION_TESTNET_1_ADDRESS = "xion14yy92ae8eq0q3ezy9nasumt65hwdgryvpkf0a4"
 NUXT_PUBLIC_XION_TESTNET_2_ADDRESS = "xion1egp7k30mskfxmhy2awk677tnqdl6lfkfxhrwsv"
-NUXT_PUBLIC_XION_TESTNET_1_RPC_URL = "https://xion-testnet-rpc.polkachu.com"
-NUXT_PUBLIC_XION_TESTNET_2_RPC_URL = "https://rpc.xion-testnet-2.burnt.com"
+NUXT_PUBLIC_XION_TESTNET_1_RPC_URL = "https://rpc.testcosmos.directory/xiontestnet"
+NUXT_PUBLIC_XION_TESTNET_2_RPC_URL = "https://rpc.testcosmos.directory/xiontestnet2"
 
 # Bind the Workers AI model catalog. Run machine learning models, powered by serverless GPUs, on Cloudflare’s global network
 # Docs: https://developers.cloudflare.com/pages/functions/bindings/#workers-ai
