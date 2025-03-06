@@ -34,7 +34,7 @@ FAUCET_NUM_ACCOUNTS = "20"
 FAUCET_PATH_PATTERN = "m/44'/118'/0'/0/a"
 FAUCET_TOKENS = "uxion"
 FAUCET_COOLDOWN_TIME = "86400"
-FAUCET_RPC_URL = "https://xion-testnet-rpc.polkachu.com"
+FAUCET_RPC_URL = "https://rpc.xion-testnet-1.burnt.com"
 
 [env.xion-testnet-2.vars]
 FAUCET_ADDRESS_PREFIX = "xion"
