@@ -92,9 +92,9 @@ id = "8fc4aa2c7fe640c3911c853d81e298d9"
 # [env.preview.vars]
 # API_KEY = "xyz789"
 
-# [[env.preview.kv_namespaces]]
-# binding = "MY_KV_NAMESPACE"
-# id = "<PREVIEW_NAMESPACE_ID>"
+[[env.preview.kv_namespaces]]
+binding = "NUXT_FAUCET_KV"
+id = "8fc4aa2c7fe640c3911c853d81e298d9"
 
 ######## PRODUCTION environment config ########
 
@@ -113,3 +113,7 @@ NUXT_PUBLIC_XION_TESTNET_1_ADDRESS = "xion14yy92ae8eq0q3ezy9nasumt65hwdgryvpkf0a
 NUXT_PUBLIC_XION_TESTNET_2_ADDRESS = "xion1egp7k30mskfxmhy2awk677tnqdl6lfkfxhrwsv"
 NUXT_PUBLIC_XION_TESTNET_1_RPC_URL = "https://rpc.xion-testnet-1.burnt.com"
 NUXT_PUBLIC_XION_TESTNET_2_RPC_URL = "https://rpc.xion-testnet-2.burnt.com"
+
+[[env.production.kv_namespaces]]
+binding = "NUXT_FAUCET_KV"
+id = "8fc4aa2c7fe640c3911c853d81e298d9"
