@@ -69,7 +69,8 @@ export default defineEventHandler(async (event) => {
         const chainIdParam = url.searchParams.get("chainId");
         if (chainIdParam) {
 
-            const chainConfig = runtimeConfig.public[chainIdParam] as unknown as ChainConfig;
+            const chains = runtimeConfig.public.chains as Record<string, ChainConfig>;
+            const chainConfig = chains[chainIdParam] as unknown as ChainConfig;
             if (!chainConfig || !chainConfig.rpcUrl || !chainConfig.address) {
                 throw new HttpError(`Configuration for chainIdParam ${chainIdParam} is missing or incomplete`, 400);
             }
@@ -106,8 +107,9 @@ export default defineEventHandler(async (event) => {
 
         const pathPattern = runtimeConfig.faucet.pathPattern;
         let mnemonic = runtimeConfig.faucet.mnemonic;
-        if (chainIdParam && runtimeConfig[chainIdParam] && runtimeConfig[chainIdParam].mnemonic) {
-            mnemonic = runtimeConfig[chainIdParam].mnemonic;
+        const chains = runtimeConfig.public.chains as Record<string, ChainConfig>;
+        if (chainIdParam && chains[chainIdParam] && chains[chainIdParam].mnemonic) {
+            mnemonic = chains[chainIdParam].mnemonic;
         }
         const accountId = await getAcoountId(kvStore);
         const faucet = await getFaucet(faucetConfig, mnemonic, pathPattern, accountId);
@@ -120,7 +122,7 @@ export default defineEventHandler(async (event) => {
             throw new HttpError(`There are no ${denom} tokens available from ${faucet.address}`, 422);
         }
 
-        // Failure will throe
+        // Failure will throw
         const result = await faucet.credit(address, matchingDenom);
         const convertedAmount = {
             amount: (parseInt(result.amount.amount) / 1000000).toString(),

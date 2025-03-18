@@ -23,6 +23,7 @@ logs
 .env.*
 !.env.example
 !.env.devnet
+!.env.testnet
 
 # wrangler files
 .wrangler

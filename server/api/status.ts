@@ -22,7 +22,9 @@ export default defineEventHandler(async (event) => {
 
 		const chainIdParam = url.searchParams.get("chainId");
 		if (chainIdParam) {
-			const chainConfig: ChainConfig = runtimeConfig.public[chainIdParam] as unknown as ChainConfig;
+			const chains = runtimeConfig.public.chains as Record<string, ChainConfig>;
+			const chainConfig: ChainConfig = chains[chainIdParam];
+			console.log(chainConfig);
 			if (!chainConfig || !chainConfig.rpcUrl || !chainConfig.address) {
 				throw new Error(`Configuration for chainId ${chainIdParam} is missing or incomplete`);
 			}
@@ -36,8 +38,9 @@ export default defineEventHandler(async (event) => {
 		//console.log(`Fetching status for faucet at ${rpcUrl}`);
 		const pathPattern = runtimeConfig.faucet.pathPattern;
 		let mnemonic = runtimeConfig.faucet.mnemonic;
-		if (chainIdParam && runtimeConfig[chainIdParam] && runtimeConfig[chainIdParam].mnemonic) {
-			mnemonic = runtimeConfig[chainIdParam].mnemonic;
+		const chains = runtimeConfig.public.chains as Record<string, ChainConfig>;
+		if (chainIdParam && chains[chainIdParam] && chains[chainIdParam].mnemonic) {
+			mnemonic = chains[chainIdParam].mnemonic;
 		}
 		const [client, wallet] = await Promise.all([
 			StargateClient.connect(rpcUrl),

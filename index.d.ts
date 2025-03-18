@@ -5,12 +5,11 @@ declare module 'nuxt/schema' {
             pathPattern: string;
             kvStore: KVNamespace;
         };
-        "xion-testnet-1": {
-            mnemonic: string;
-        };
-        "xion-testnet-2": {
-            mnemonic: string;
-        };
+        chains: {
+            [chain_id]: {
+                mnemonic: string;
+            };
+        }
         turnstile: {
             secretKey: string;
         };
@@ -18,8 +17,9 @@ declare module 'nuxt/schema' {
     interface PublicRuntimeConfig {
         sendImage: string;
         faucet: FaucetConfig;
-        "xion-testnet-1": ChainConfig;
-        "xion-testnet-2": ChainConfig;
+        chains: {
+            [chain_id]: ChainConfig;
+        };
         turnstile: {
             siteKey: string;
         };

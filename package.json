@@ -9,7 +9,9 @@
     "preview": "npm run build && wrangler pages dev",
     "postinstall": "nuxt prepare",
     "deploy": "npm run build && wrangler pages deploy",
-    "cf-typegen": "wrangler types"
+    "cf-typegen": "wrangler types",
+    "build:devnet": "nuxt build --dotenv .env.devnet",
+    "build:testnet": "nuxt build --dotenv .env.testnet"
   },
   "dependencies": {
     "@cosmjs/faucet": "^0.32.4",

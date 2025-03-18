@@ -28,11 +28,16 @@ export default defineNuxtConfig({
     turnstile: {
       secretKey: process.env.NUXT_TURNSTILE_SECRET_KEY as string,
     },
-    "xion-testnet-1": {
-      mnemonic: process.env.NUXT_XION_TESTNET_1_MNEMONIC as string,
-    },
-    "xion-testnet-2": {
-      mnemonic: process.env.NUXT_XION_TESTNET_2_MNEMONIC as string,
+    chains: {
+      "xion-testnet-1": {
+        mnemonic: process.env.NUXT_XION_TESTNET_1_MNEMONIC as string,
+      },
+      "xion-testnet-2": {
+        mnemonic: process.env.NUXT_XION_TESTNET_2_MNEMONIC as string,
+      },
+      "xion-devnet-1": {
+        mnemonic: process.env.NUXT_XION_DEVNET_1_MNEMONIC as string,
+      },
     },
     public: {
       faucet: {
@@ -48,13 +53,19 @@ export default defineNuxtConfig({
         rpcUrl: process.env.NUXT_PUBLIC_XION_TESTNET_2_RPC_URL as string,
         tokens: process.env.NUXT_PUBLIC_FAUCET_TOKENS as string,
       },
-      "xion-testnet-1": {
-        address: process.env.NUXT_PUBLIC_XION_TESTNET_1_ADDRESS as string,
-        rpcUrl: process.env.NUXT_PUBLIC_XION_TESTNET_1_RPC_URL as string,
-      },
-      "xion-testnet-2": {
-        address: process.env.NUXT_PUBLIC_XION_TESTNET_2_ADDRESS as string,
-        rpcUrl: process.env.NUXT_PUBLIC_XION_TESTNET_2_RPC_URL as string,
+      chains: {
+        "xion-testnet-1": {
+          address: process.env.NUXT_PUBLIC_XION_TESTNET_1_ADDRESS as string,
+          rpcUrl: process.env.NUXT_PUBLIC_XION_TESTNET_1_RPC_URL as string,
+        },
+        "xion-testnet-2": {
+          address: process.env.NUXT_PUBLIC_XION_TESTNET_2_ADDRESS as string,
+          rpcUrl: process.env.NUXT_PUBLIC_XION_TESTNET_2_RPC_URL as string,
+        },
+        "xion-devnet-1": {
+          address: process.env.NUXT_PUBLIC_XION_DEVNET_1_ADDRESS as string,
+          rpcUrl: process.env.NUXT_PUBLIC_XION_DEVNET_1_RPC_URL as string,
+        }
       }
     },
   },

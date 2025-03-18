@@ -22,9 +22,9 @@
 				<v-col cols="12">
 					<v-card class="mb-12 col-auto" color="lighten-1">
 						<v-text-field v-model="walletAddress" autocomplete="wallet-address" label="Xion Wallet Address"
-							:hint="`Example: ${$config.public[selected]?.address || $config.public.faucet.address}`"
+							:hint="`Example: ${$config.public.chains[selected]?.address || $config.public.faucet.address}`"
 							required class="col-12" :rules="[
-								(value: string) => !!value || `Required.\n Example: ${$config.public[selected]?.address || $config.public.faucet.address}`,
+								(value: string) => !!value || `Required.\n Example: ${$config.public.chains[selected]?.address || $config.public.faucet.address}`,
 								(value: string) => /^(xion)1[a-z0-9]{38,64}$/.test(value) || 'Invalid xion address format.',
 							]" />
 					</v-card>

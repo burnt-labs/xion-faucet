@@ -39,7 +39,7 @@ export default {
     return {
       faucetStatus: '',
       faucetStatusColor: '',
-      items: ['xion-testnet-1', "xion-testnet-2"],
+      items: Object.keys(this.$config.public.chains),
       selected: 'xion-testnet-2',
     };
   },

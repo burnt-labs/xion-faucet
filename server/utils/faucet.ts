@@ -74,7 +74,7 @@ export class Faucet {
   public async send(job: SendJob): Promise<DeliverTxResponse> {
     const client = this.client
     const { sender, recipient, amount } = job;
-    const { gasPrice, gasLimit, memo } = this.config;
+    const { granter, gasPrice, gasLimit, memo } = this.config;
     const gasLimitSend = parseInt(gasLimit, 10);
     const fee = calculateFee(gasLimitSend, gasPrice);
     const result = await client.sendTokens(sender, recipient, [amount], fee, memo);

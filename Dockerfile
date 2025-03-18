@@ -1,7 +1,7 @@
 # ---- Base Node ----
 FROM node:lts AS build
 
-ARG ENV_FILE
+ARG ENV_FILE=.env
 WORKDIR /app
 COPY package*.json ./
 
