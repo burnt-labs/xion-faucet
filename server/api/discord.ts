@@ -1,40 +1,60 @@
-import { StargateClient } from '@cosmjs/stargate';
-import { getAvailableTokens, getWallet } from '../utils/utils';
-import { parseBankTokens } from '@cosmjs/faucet/build/tokens';
-import { ChainConfig } from 'nuxt/schema';
-import {
-    InteractionType,
-    InteractionResponseType,
-    MessageComponentTypes,
-    ButtonStyleTypes,
-    verifyKeyMiddleware,
-} from 'discord-interactions';
+import { verifyKey } from 'discord-interactions';
 import { HttpError } from './credit';
-
-export interface FaucetRequestBody {
-    readonly type: InteractionType;
-    readonly data: any
-}
+import { DiscordConfig } from 'nuxt/schema';
 
 
 export default defineEventHandler(async (event) => {
     try {
-        const body = await readBody(event) as unknown as FaucetRequestBody;
-        const { type, data } = body
-        console.log("Discord interaction:", type, data)
-        /**
-         * Handle slash command requests
-         */
-        if (type === InteractionType.APPLICATION_COMMAND) {
-            // Slash command with name of "faucet"
-            if (data.name === 'faucet') {
-                // Send a message as response
-                return new Response(JSON.stringify({
-                    type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
-                    data: { content: 'Please use https://faucet.testnet.burnt.com' },
-                }), { status: 200 });
-            }
+        if (event.method !== "POST") {
+            throw new HttpError("This endpoint requires a POST request", 405);
         }
+
+        if (event.headers.get("Content-Type") !== "application/json") {
+            throw new HttpError("Content-type application/json expected", 415);
+        }
+
+        const runtimeConfig = useRuntimeConfig(event);
+        const { publicKey } = runtimeConfig.public.discord;
+
+        const signature = event.headers.get("X-Signature-Ed25519");
+        const timestamp = event.headers.get("X-Signature-Timestamp");
+
+        const body = await readBody(event);
+
+        const isValidRequest = verifyKey(
+            body,
+            signature!,
+            timestamp!,
+            publicKey
+        );
+
+        if (!isValidRequest) {
+            throw new HttpError("Invalid request signature", 415);
+        }
+
+        const json = JSON.parse(body);
+        console.log(json)
+
+        // Respond to Ping from Discord to verify the endpoint
+        if (json.type === 1) {
+            return new Response(JSON.stringify({ type: 1 }), {
+                headers: { "Content-Type": "application/json" },
+            });
+        }
+
+        // Handle /faucet command
+        if (json.data.name === "faucet") {
+            return new Response(JSON.stringify({
+                type: 4, // CHANNEL_MESSAGE_WITH_SOURCE
+                data: {
+                    content: "Please use https://faucet.xion.burnt.com",
+                },
+            }), {
+                headers: { "Content-Type": "application/json" },
+            });
+        }
+
+        throw new HttpError("Unknown commande", 400);
     } catch (e) {
         console.error(e);
         if (e instanceof HttpError) {
@@ -43,7 +63,7 @@ export default defineEventHandler(async (event) => {
                 headers: { "Content-Type": "application/json" }
             });
         }
-        return new Response(JSON.stringify(new HttpError(`Sending tokens failed: ${e}`, 500)), {
+        return new Response(JSON.stringify(new HttpError(`Error: ${e}`, 500)), {
             status: 500,
             headers: { "Content-Type": "application/json" }
         });

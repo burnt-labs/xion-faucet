@@ -16,13 +16,14 @@ declare module 'nuxt/schema' {
         };
     }
     interface PublicRuntimeConfig {
-        sendImage: string;
+        discord: DiscordConfig
         faucet: FaucetConfig;
-        "xion-testnet-1": ChainConfig;
-        "xion-testnet-2": ChainConfig;
+        sendImage: string;
         turnstile: {
             siteKey: string;
         };
+        "xion-testnet-1": ChainConfig;
+        "xion-testnet-2": ChainConfig;
     }
     interface FaucetConfig {
         address: string;
@@ -41,6 +42,10 @@ declare module 'nuxt/schema' {
     interface ChainConfig {
         address: string;
         rpcUrl: string;
+    }
+
+    interface DiscordConfig {
+        publicKey: string;
     }
 }
 

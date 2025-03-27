@@ -35,6 +35,9 @@ export default defineNuxtConfig({
       mnemonic: process.env.NUXT_XION_TESTNET_2_MNEMONIC as string,
     },
     public: {
+      discord: {
+        publicKey: process.env.NUXT_DISCORD_PUBLIC_KEY as string,
+      },
       faucet: {
         address: process.env.NUXT_PUBLIC_XION_TESTNET_2_ADDRESS as string,
         addressPrefix: process.env.NUXT_PUBLIC_FAUCET_ADDRESS_PREFIX as string,
