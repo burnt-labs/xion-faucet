@@ -1,4 +1,4 @@
-import { ChainConfig } from 'nuxt/schema';
+import { ChainConfig, FaucetConfig, RuntimeConfig, WalletConfig } from 'nuxt/schema';
 import { getFaucet } from '../utils/faucet';
 import { isValidAddress } from "../utils/utils";
 import { HttpError as CosmjsHttpError } from "@cosmjs/faucet/build/api/httperror";
@@ -21,7 +21,7 @@ export class HttpError extends CosmjsHttpError {
     }
 }
 
-const getAcoountId = async (kvStore: KVNamespace): Promise<number> => {
+const getAcountId = async (kvStore: KVNamespace): Promise<number> => {
     const acctNum = Math.floor(Math.random() * 15) + 1;
     const acctKey = `account${acctNum.toString().padStart(3, "0")}`;
     const entry = await kvStore.getWithMetadata(acctKey);
@@ -29,7 +29,7 @@ const getAcoountId = async (kvStore: KVNamespace): Promise<number> => {
         await kvStore.put(acctKey, new Date().toISOString(), { expirationTtl: 60 });
         return acctNum
     }
-    return await getAcoountId(kvStore);
+    return await getAcountId(kvStore);
 }
 
 //export const onRequest: PagesFunction<Env> = async (context): Promise<Response> => {
@@ -61,82 +61,15 @@ export default defineEventHandler(async (event) => {
                 statusMessage: 'Token not verified.',
             })
         }
-
         const runtimeConfig = useRuntimeConfig(event);
-        const faucetConfig = runtimeConfig.public.faucet;
-
-        const url = getRequestURL(event);
-        const chainIdParam = url.searchParams.get("chainId");
-        if (chainIdParam) {
-
-            const chainConfig = runtimeConfig.public[chainIdParam] as unknown as ChainConfig;
-            if (!chainConfig || !chainConfig.rpcUrl || !chainConfig.address) {
-                throw new HttpError(`Configuration for chainIdParam ${chainIdParam} is missing or incomplete`, 400);
-            }
-            faucetConfig.rpcUrl = chainConfig.rpcUrl;
-            faucetConfig.address = chainConfig.address;
-        }
-
-        const { addressPrefix, cooldownTime } = faucetConfig
-
-        if (!isValidAddress(address, addressPrefix)) {
-            throw new HttpError("Address is not in the expected format for this chain.", 400);
-        }
-        const kvStore = event.context.cloudflare.env.NUXT_FAUCET_KV
         const ipAddress = getRequestIP(event, { xForwardedFor: true });
-        const addEntry = address !== faucetConfig.address ? await kvStore.get(address) : null;
-        const ipEntry = ipAddress ? await kvStore.get(ipAddress) : null;
-        if (addEntry !== null || ipEntry !== null) {
-            const entry = addEntry ? addEntry : ipEntry ? ipEntry : 0;
-            const entryKey = addEntry ? address : ipAddress
-            const entryDate = new Date(entry);
-            const currentDate = new Date();
-            const cooldownEnd = new Date(entryDate.getTime() + cooldownTime * 1000);
-            const remainingTime = Math.ceil((cooldownEnd.getTime() - currentDate.getTime()) / 1000);
-
-            const hours = Math.floor(remainingTime / 3600);
-            const minutes = Math.floor((remainingTime % 3600) / 60);
-            const seconds = remainingTime % 60;
-
-            const humanReadableTime = `${hours}h ${minutes}m ${seconds}s`;
-
-            throw new HttpError(`Too many requests for the same address (${entryKey}). Please wait ${humanReadableTime} and try again!`, 405);
+        const url = getRequestURL(event);
+        const chainId = url.searchParams.get("chainId");
+        if (!chainId) {
+            throw new HttpError("Missing chainId parameter", 400);
         }
-
-
-        const pathPattern = runtimeConfig.faucet.pathPattern;
-        let mnemonic = runtimeConfig.faucet.mnemonic;
-        if (chainIdParam && runtimeConfig[chainIdParam] && runtimeConfig[chainIdParam].mnemonic) {
-            mnemonic = runtimeConfig[chainIdParam].mnemonic;
-        }
-        const accountId = await getAcoountId(kvStore);
-        const faucet = await getFaucet(faucetConfig, mnemonic, pathPattern, accountId);
-        const availableTokens = await faucet.availableTokens()
-        const matchingDenom = availableTokens.find(
-            (availableDenom: string) => availableDenom === denom
-        );
-
-        if (!matchingDenom) {
-            throw new HttpError(`There are no ${denom} tokens available from ${faucet.address}`, 422);
-        }
-
-        // Failure will throe
-        const result = await faucet.credit(address, matchingDenom);
-        const convertedAmount = {
-            amount: (parseInt(result.amount.amount) / 1000000).toString(),
-            denom: result.amount.denom.startsWith('u') ? result.amount.denom.slice(1) : result.amount.denom
-        };
-
-        const resultMod = {
-            ...result,
-            convertedAmount
-        };
-
-        if (address !== faucetConfig.address) {
-            await kvStore.put(address, new Date().toISOString(), { expirationTtl: cooldownTime });
-            console.log(ipAddress)
-            if (ipAddress) await kvStore.put(ipAddress, new Date().toISOString(), { expirationTtl: cooldownTime });
-        }
+        const identifiers = ipAddress ? [address, ipAddress] : [address];
+        const resultMod = await creditAccount(runtimeConfig, address, denom, chainId, identifiers);
 
         return new Response(JSON.stringify(resultMod), {
             status: 200,
@@ -157,3 +90,89 @@ export default defineEventHandler(async (event) => {
     }
 });
 
+export const creditAccount = async (runtimeConfig: RuntimeConfig, address: string, denom: string, chainId: string, identifiers: string[]) => {
+    const faucetConfig = getChainFaucetConfig(runtimeConfig, chainId);
+    const { addressPrefix, cooldownTime } = faucetConfig
+
+    if (!isValidAddress(address, addressPrefix)) {
+        throw new HttpError("Address is not in the expected format for this chain.", 400);
+    }
+
+    const kvStore = runtimeConfig.kvStore as KVNamespace;
+    if (address !== faucetConfig.address) {
+        await checkKvStore(kvStore, cooldownTime, identifiers);
+    }
+
+    const { mnemonic, pathPattern } = getWalletConfig(runtimeConfig, chainId);
+    const accountId = await getAcountId(kvStore);
+    const faucet = await getFaucet(faucetConfig, mnemonic, pathPattern, accountId);
+    const availableTokens = await faucet.availableTokens()
+    const matchingDenom = availableTokens.find(
+        (availableDenom: string) => availableDenom === denom
+    );
+
+    if (!matchingDenom) {
+        throw new HttpError(`There are no ${denom} tokens available from ${faucet.address}`, 422);
+    }
+
+    // Failure will throw
+    const result = await faucet.credit(address, matchingDenom);
+    const convertedAmount = {
+        amount: (parseInt(result.amount.amount) / 1000000).toString(),
+        denom: result.amount.denom.startsWith('u') ? result.amount.denom.slice(1) : result.amount.denom
+    };
+
+    const resultMod = {
+        ...result,
+        convertedAmount
+    };
+
+    if (address !== faucetConfig.address) {
+        for (const identifier of identifiers) {
+            await kvStore.put(identifier, new Date().toISOString(), { expirationTtl: cooldownTime });
+        }
+    }
+
+    return resultMod;
+};
+
+const checkKvStore = async (kvStore: KVNamespace, cooldownTime: number, identifiers: string[]) => {
+    for (const identifier in identifiers) {
+        const addEntry = await kvStore.get(identifier);
+        if (addEntry === null) {
+            const entryDate = new Date(identifier);
+            const currentDate = new Date();
+            const cooldownEnd = new Date(entryDate.getTime() + cooldownTime * 1000);
+            const remainingTime = Math.ceil((cooldownEnd.getTime() - currentDate.getTime()) / 1000);
+
+            const hours = Math.floor(remainingTime / 3600);
+            const minutes = Math.floor((remainingTime % 3600) / 60);
+            const seconds = remainingTime % 60;
+
+            const humanReadableTime = `${hours}h ${minutes}m ${seconds}s`;
+
+            throw new HttpError(`Too many requests for the same address (${identifier}). Please wait ${humanReadableTime} and try again!`, 405);
+        }
+    }
+}
+
+const getChainFaucetConfig = (runtimeConfig: RuntimeConfig, chainId: string): FaucetConfig => {
+    const faucetConfig = runtimeConfig.public.faucet;
+
+    if (chainId) {
+        const chainConfig = runtimeConfig.public[chainId] as unknown as ChainConfig;
+        if (!chainConfig || !chainConfig.rpcUrl || !chainConfig.address) {
+            throw new HttpError(`Configuration for chainIdParam ${chainId} is missing or incomplete`, 400);
+        }
+        faucetConfig.rpcUrl = chainConfig.rpcUrl;
+        faucetConfig.address = chainConfig.address;
+    }
+    return faucetConfig;
+}
+
+const getWalletConfig = (runtimeConfig: RuntimeConfig, chainId: string): WalletConfig => {
+    if (chainId && runtimeConfig[chainId]) {
+        return runtimeConfig[chainId] as unknown as WalletConfig;
+    }
+    return runtimeConfig.faucet as unknown as WalletConfig;
+}

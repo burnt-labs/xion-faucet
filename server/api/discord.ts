@@ -1,7 +1,5 @@
-import { verifyKey } from 'discord-interactions';
-import { HttpError } from './credit';
-import { DiscordConfig } from 'nuxt/schema';
-
+import { creditAccount, HttpError } from './credit';
+import { verifyKey, InteractionType, InteractionResponseType } from 'discord-interactions';
 
 export default defineEventHandler(async (event) => {
     try {
@@ -14,15 +12,18 @@ export default defineEventHandler(async (event) => {
         }
 
         const runtimeConfig = useRuntimeConfig(event);
-        const { publicKey } = runtimeConfig.public.discord;
+        const { publicKey } = runtimeConfig.discord;
 
         const signature = event.headers.get("X-Signature-Ed25519");
         const timestamp = event.headers.get("X-Signature-Timestamp");
 
-        const body = await readBody(event);
-        console.log(body)
+        const body = await readRawBody(event, false);
 
-        const isValidRequest = verifyKey(
+        if (!body) {
+            throw new HttpError("No body found", 400);
+        }
+
+        const isValidRequest = await verifyKey(
             body,
             signature!,
             timestamp!,
@@ -33,40 +34,74 @@ export default defineEventHandler(async (event) => {
             throw new HttpError("Invalid request signature", 415);
         }
 
-        const json = body
-        console.log(json)
+        const json = JSON.parse(body.toString('utf8'));
+        return handleInteraction(json, event);
 
-        // Respond to Ping from Discord to verify the endpoint
-        if (json.type === 1) {
-            return new Response(JSON.stringify({ type: 1 }), {
-                headers: { "Content-Type": "application/json" },
-            });
-        }
-
-        // Handle /faucet command
-        if (json.data.name === "faucet") {
-            return new Response(JSON.stringify({
-                type: 4, // CHANNEL_MESSAGE_WITH_SOURCE
-                data: {
-                    content: "Please use https://faucet.xion.burnt.com",
-                },
-            }), {
-                headers: { "Content-Type": "application/json" },
-            });
-        }
-
-        throw new HttpError("Unknown commande", 400);
     } catch (e) {
         console.error(e);
         if (e instanceof HttpError) {
-            return new Response(JSON.stringify(e), {
+            return Response.json(e, {
                 status: e.status,
                 headers: { "Content-Type": "application/json" }
             });
         }
-        return new Response(JSON.stringify(new HttpError(`Error: ${e}`, 500)), {
+        return Response.json(new HttpError(`Error: ${e}`, 500), {
             status: 500,
             headers: { "Content-Type": "application/json" }
         });
     }
 })
+
+// Interaction handler function to replace the switch statement
+async function handleInteraction(interaction: any, event: any) {
+    const runtimeConfig = useRuntimeConfig(event);
+
+    // Handle ping
+    if (interaction.type === InteractionType.PING) {
+        return Response.json({ type: InteractionResponseType.PONG }, {
+            status: 200,
+        });
+    }
+
+    // Handle application commands
+    if (interaction.type === InteractionType.APPLICATION_COMMAND) {
+        const username = `${interaction.member.user.username}#${interaction.member.user.discriminator}`;
+        console.log(`Handle command: ${interaction.data.name} from user: ${username}`);
+
+        if (interaction.data.name === "faucet") {
+            return handleFaucetCommand(interaction, event);
+        }
+    }
+
+    throw new HttpError("Unknown interaction", 400);
+}
+
+async function handleFaucetCommand(interaction: any, event: any) {
+    const options = interaction.data.options
+    const address = options.find((opt: any) => opt.name === "address")?.value;
+    const runtimeConfig = useRuntimeConfig(event)
+    const denom = runtimeConfig.public.faucet.denom;
+    const chainId = runtimeConfig.public.faucet.chainId;
+    const mention = `<@${interaction.member.user.id}>`;
+    const identifiers = [address, interaction.member.user.id];
+
+    try {
+        const res = await creditAccount(runtimeConfig, address, denom, chainId, identifiers)
+        // Follow-up would need to be implemented with a webhook
+        // This is simplified for this example
+        return Response.json({
+            type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
+            data: {
+                content: `${mention} We sent ${res.amount.amount}${res.amount.denom} to address: ${res.recipient}, tx hash: ${res.transactionHash}`,
+            }
+        });
+    } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        return Response.json({
+            type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
+            data: {
+                content: `${mention} We couldn't send funds: ${errorMessage}`
+            }
+        });
+    }
+}

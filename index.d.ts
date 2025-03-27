@@ -1,22 +1,15 @@
 declare module 'nuxt/schema' {
     interface RuntimeConfig {
-        faucet: {
-            mnemonic: string;
-            pathPattern: string;
-            kvStore: KVNamespace;
-        };
-        "xion-testnet-1": {
-            mnemonic: string;
-        };
-        "xion-testnet-2": {
-            mnemonic: string;
-        };
+        discord: DiscordConfig;
+        kvStore: KVNamespace;
+        faucet: WalletConfig;
+        "xion-testnet-1": WalletConfig;
+        "xion-testnet-2": WalletConfig;
         turnstile: {
             secretKey: string;
         };
     }
     interface PublicRuntimeConfig {
-        discord: DiscordConfig
         faucet: FaucetConfig;
         sendImage: string;
         turnstile: {
@@ -29,6 +22,7 @@ declare module 'nuxt/schema' {
         address: string;
         addressPrefix: string;
         amountGiven: number;
+        chainId: string;
         cooldownTime: number;
         denom: string;
         gasLimit: string;
@@ -39,6 +33,11 @@ declare module 'nuxt/schema' {
         tokens: string;
     }
 
+    interface WalletConfig {
+        mnemonic: string;
+        pathPattern: string;
+    }
+
     interface ChainConfig {
         address: string;
         rpcUrl: string;
@@ -46,6 +45,15 @@ declare module 'nuxt/schema' {
 
     interface DiscordConfig {
         publicKey: string;
+        appId: string;
+        token: string;
+        guildId: string;
+    }
+
+    interface DiscordUserData {
+        username: string;
+        discriminator?: string;
+        // Add other properties as needed
     }
 }
 
