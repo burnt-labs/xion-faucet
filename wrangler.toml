@@ -89,8 +89,21 @@ id = "8fc4aa2c7fe640c3911c853d81e298d9"
 
 ######## PREVIEW environment config ########
 
-# [env.preview.vars]
-# API_KEY = "xyz789"
+[env.preview.vars]
+NUXT_PUBLIC_FAUCET_ADDRESS_PREFIX = "xion"
+NUXT_PUBLIC_FAUCET_AMOUNT_GIVEN = "2000000"
+NUXT_PUBLIC_FAUCET_COOLDOWN_TIME = "86400"
+NUXT_PUBLIC_FAUCET_DENOM = "uxion"
+NUXT_PUBLIC_FAUCET_GAS_LIMIT = "200000"
+NUXT_PUBLIC_FAUCET_GAS_PRICE = "0.001uxion"
+NUXT_PUBLIC_FAUCET_LOGGING = "false"
+NUXT_PUBLIC_FAUCET_MEMO = "Faucet Transaction"
+NUXT_PUBLIC_FAUCET_TOKENS = "uxion"
+NUXT_PUBLIC_SEND_IMAGE = "/assets/img/shadowy.gif"
+NUXT_PUBLIC_XION_TESTNET_1_ADDRESS = "xion14yy92ae8eq0q3ezy9nasumt65hwdgryvpkf0a4"
+NUXT_PUBLIC_XION_TESTNET_2_ADDRESS = "xion1egp7k30mskfxmhy2awk677tnqdl6lfkfxhrwsv"
+NUXT_PUBLIC_XION_TESTNET_1_RPC_URL = "https://rpc.xion-testnet-1.burnt.com"
+NUXT_PUBLIC_XION_TESTNET_2_RPC_URL = "https://rpc.xion-testnet-2.burnt.com"
 
 [[env.preview.kv_namespaces]]
 binding = "NUXT_FAUCET_KV"
