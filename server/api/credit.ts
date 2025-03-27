@@ -134,6 +134,7 @@ export default defineEventHandler(async (event) => {
 
         if (address !== faucetConfig.address) {
             await kvStore.put(address, new Date().toISOString(), { expirationTtl: cooldownTime });
+            console.log(ipAddress)
             if (ipAddress) await kvStore.put(ipAddress, new Date().toISOString(), { expirationTtl: cooldownTime });
         }
 
