@@ -20,6 +20,7 @@ export default defineEventHandler(async (event) => {
         const timestamp = event.headers.get("X-Signature-Timestamp");
 
         const body = await readBody(event);
+        console.log(body)
 
         const isValidRequest = verifyKey(
             body,
@@ -32,7 +33,7 @@ export default defineEventHandler(async (event) => {
             throw new HttpError("Invalid request signature", 415);
         }
 
-        const json = JSON.parse(body);
+        const json = body
         console.log(json)
 
         // Respond to Ping from Discord to verify the endpoint
