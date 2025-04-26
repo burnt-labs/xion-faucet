@@ -1,9 +1,7 @@
 declare module 'nuxt/schema' {
     interface RuntimeConfig {
         discord: DiscordConfig;
-        kvStore: KVNamespace;
         faucet: WalletConfig;
-        "xion-testnet-1": WalletConfig;
         "xion-testnet-2": WalletConfig;
         turnstile: {
             secretKey: string;
@@ -15,7 +13,6 @@ declare module 'nuxt/schema' {
         turnstile: {
             siteKey: string;
         };
-        "xion-testnet-1": ChainConfig;
         "xion-testnet-2": ChainConfig;
     }
     interface FaucetConfig {
@@ -36,6 +33,7 @@ declare module 'nuxt/schema' {
     interface WalletConfig {
         mnemonic: string;
         pathPattern: string;
+        //kvStore: string;
     }
 
     interface ChainConfig {

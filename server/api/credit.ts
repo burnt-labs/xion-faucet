@@ -36,6 +36,8 @@ const getAcountId = async (kvStore: KVNamespace): Promise<number> => {
 export default defineEventHandler(async (event) => {
     try {
 
+        const cloudflareEnv = event.context.cloudflare.env;
+
         if (event.method !== "POST") {
             throw new HttpError("This endpoint requires a POST request", 405);
         }
@@ -65,11 +67,16 @@ export default defineEventHandler(async (event) => {
         const ipAddress = getRequestIP(event, { xForwardedFor: true });
         const url = getRequestURL(event);
         const chainId = url.searchParams.get("chainId");
+
+        // Cannot pass via runtimeConfig when running as a worker
+
+        console.log("KVStore", event.context.cloudflare.env);
+        const kvStore = cloudflareEnv.NUXT_FAUCET_KV
         if (!chainId) {
             throw new HttpError("Missing chainId parameter", 400);
         }
         const identifiers = ipAddress ? [address, ipAddress] : [address];
-        const resultMod = await creditAccount(runtimeConfig, address, denom, chainId, identifiers);
+        const resultMod = await creditAccount(runtimeConfig, address, denom, chainId, identifiers, kvStore);
 
         return new Response(JSON.stringify(resultMod), {
             status: 200,
@@ -90,7 +97,7 @@ export default defineEventHandler(async (event) => {
     }
 });
 
-export const creditAccount = async (runtimeConfig: RuntimeConfig, address: string, denom: string, chainId: string, identifiers: string[]) => {
+export const creditAccount = async (runtimeConfig: RuntimeConfig, address: string, denom: string, chainId: string, identifiers: string[], kvStore: KVNamespace) => {
     const faucetConfig = getChainFaucetConfig(runtimeConfig, chainId);
     const { addressPrefix, cooldownTime } = faucetConfig
 
@@ -98,12 +105,11 @@ export const creditAccount = async (runtimeConfig: RuntimeConfig, address: strin
         throw new HttpError("Address is not in the expected format for this chain.", 400);
     }
 
-    const kvStore = runtimeConfig.kvStore as KVNamespace;
+    const { mnemonic, pathPattern } = getWalletConfig(runtimeConfig, chainId);
     if (address !== faucetConfig.address) {
         await checkKvStore(kvStore, cooldownTime, identifiers);
     }
 
-    const { mnemonic, pathPattern } = getWalletConfig(runtimeConfig, chainId);
     const accountId = await getAcountId(kvStore);
     const faucet = await getFaucet(faucetConfig, mnemonic, pathPattern, accountId);
     const availableTokens = await faucet.availableTokens()
@@ -172,6 +178,7 @@ const getChainFaucetConfig = (runtimeConfig: RuntimeConfig, chainId: string): Fa
 
 const getWalletConfig = (runtimeConfig: RuntimeConfig, chainId: string): WalletConfig => {
     if (chainId && runtimeConfig[chainId]) {
+        console.log(runtimeConfig[chainId]);
         return runtimeConfig[chainId] as unknown as WalletConfig;
     }
     return runtimeConfig.faucet as unknown as WalletConfig;

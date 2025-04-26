@@ -15,7 +15,12 @@ export default defineNuxtConfig({
   devtools: { enabled: true },
 
   nitro: {
-    preset: "cloudflare-pages"
+    preset: "cloudflare_module",
+
+    cloudflare: {
+      deployConfig: true,
+      nodeCompat: true
+    }
   },
 
   modules: [
@@ -28,7 +33,6 @@ export default defineNuxtConfig({
   },
 
   runtimeConfig: {
-    kvStore: getEnvVar<KVNamespace>("NUXT_FAUCET_KV"),
     discord: {
       appId: getEnvVar("NUXT_DISCORD_APP_ID"),
       token: getEnvVar("NUXT_DISCORD_TOKEN"),
@@ -38,14 +42,12 @@ export default defineNuxtConfig({
     faucet: {
       mnemonic: getEnvVar("NUXT_XION_TESTNET_2_MNEMONIC"),
       pathPattern: getEnvVar("NUXT_FAUCET_PATH_PATTERN"),
-    },
-    "xion-testnet-1": {
-      mnemonic: getEnvVar("NUXT_XION_TESTNET_1_MNEMONIC"),
-      pathPattern: getEnvVar("NUXT_FAUCET_PATH_PATTERN"),
+      //kvStore: getEnvVar("NUXT_FAUCET_KV"),
     },
     "xion-testnet-2": {
       mnemonic: getEnvVar("NUXT_XION_TESTNET_2_MNEMONIC"),
       pathPattern: getEnvVar("NUXT_FAUCET_PATH_PATTERN"),
+      //kvStore: getEnvVar("NUXT_FAUCET_KV")
     },
     turnstile: {
       secretKey: getEnvVar("NUXT_TURNSTILE_SECRET_KEY"),
@@ -64,10 +66,6 @@ export default defineNuxtConfig({
         memo: getEnvVar("NUXT_PUBLIC_FAUCET_MEMO"),
         rpcUrl: getEnvVar("NUXT_PUBLIC_XION_TESTNET_2_RPC_URL"),
         tokens: getEnvVar("NUXT_PUBLIC_FAUCET_TOKENS"),
-      },
-      "xion-testnet-1": {
-        address: getEnvVar("NUXT_PUBLIC_XION_TESTNET_1_ADDRESS"),
-        rpcUrl: getEnvVar("NUXT_PUBLIC_XION_TESTNET_1_RPC_URL"),
       },
       "xion-testnet-2": {
         address: getEnvVar("NUXT_PUBLIC_XION_TESTNET_2_ADDRESS"),
@@ -97,4 +95,5 @@ export default defineNuxtConfig({
       },
     },
   },
+
 })
