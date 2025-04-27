@@ -44,3 +44,4 @@ export const getAvailableTokens = async (client: StargateClient, address: string
         .map((b) => bankTokens.find((token) => token === b.denom))
         .filter(isDefined);
 }
+

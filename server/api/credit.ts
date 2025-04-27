@@ -1,12 +1,13 @@
-import { ChainConfig, FaucetConfig, RuntimeConfig, WalletConfig } from 'nuxt/schema';
 import { getFaucet } from '../utils/faucet';
 import { isValidAddress } from "../utils/utils";
 import { HttpError as CosmjsHttpError } from "@cosmjs/faucet/build/api/httperror";
+import { H3Event, EventHandlerRequest } from "h3";
 
 export interface CreditRequestBody {
     readonly denom: string;
     readonly address: string;
     readonly token: string;
+    readonly chainId: string;
 }
 
 export class HttpError extends CosmjsHttpError {
@@ -47,7 +48,7 @@ export default defineEventHandler(async (event) => {
         }
 
         const creditBody = await readBody(event) as unknown as CreditRequestBody;
-        const { address, denom, token } = creditBody;
+        const { address, denom, token, chainId } = creditBody;
 
         if (!token) {
             throw createError({
@@ -63,20 +64,11 @@ export default defineEventHandler(async (event) => {
                 statusMessage: 'Token not verified.',
             })
         }
-        const runtimeConfig = useRuntimeConfig(event);
         const ipAddress = getRequestIP(event, { xForwardedFor: true });
         const url = getRequestURL(event);
-        const chainId = url.searchParams.get("chainId");
 
-        // Cannot pass via runtimeConfig when running as a worker
-
-        console.log("KVStore", event.context.cloudflare.env);
-        const kvStore = cloudflareEnv.NUXT_FAUCET_KV
-        if (!chainId) {
-            throw new HttpError("Missing chainId parameter", 400);
-        }
         const identifiers = ipAddress ? [address, ipAddress] : [address];
-        const resultMod = await creditAccount(runtimeConfig, address, denom, chainId, identifiers, kvStore);
+        const resultMod = await creditAccount(event, address, denom, identifiers);
 
         return new Response(JSON.stringify(resultMod), {
             status: 200,
@@ -97,15 +89,25 @@ export default defineEventHandler(async (event) => {
     }
 });
 
-export const creditAccount = async (runtimeConfig: RuntimeConfig, address: string, denom: string, chainId: string, identifiers: string[], kvStore: KVNamespace) => {
-    const faucetConfig = getChainFaucetConfig(runtimeConfig, chainId);
+export const creditAccount = async (event: H3Event<EventHandlerRequest>, address: string, denom: string, chainId: string, identifiers: string[]) => {
+    const runtimeConfig = useRuntimeConfig(event);
+    const faucetConfig = runtimeConfig.public.faucet
     const { addressPrefix, cooldownTime } = faucetConfig
 
     if (!isValidAddress(address, addressPrefix)) {
         throw new HttpError("Address is not in the expected format for this chain.", 400);
     }
 
-    const { mnemonic, pathPattern } = getWalletConfig(runtimeConfig, chainId);
+    const { mnemonic, pathPattern } = runtimeConfig.faucet;
+    let kvStore: KVNamespace
+
+    // Hack for cloudflare worker binding
+    if (typeof runtimeConfig.faucet.kvStore === 'string') {
+        kvStore = event.context.cloudflare.env.NUXT_FAUCET_KV;
+    } else {
+        kvStore = runtimeConfig.fuancet.kvStore
+    }
+
     if (address !== faucetConfig.address) {
         await checkKvStore(kvStore, cooldownTime, identifiers);
     }
@@ -162,24 +164,4 @@ const checkKvStore = async (kvStore: KVNamespace, cooldownTime: number, identifi
     }
 }
 
-const getChainFaucetConfig = (runtimeConfig: RuntimeConfig, chainId: string): FaucetConfig => {
-    const faucetConfig = runtimeConfig.public.faucet;
 
-    if (chainId) {
-        const chainConfig = runtimeConfig.public[chainId] as unknown as ChainConfig;
-        if (!chainConfig || !chainConfig.rpcUrl || !chainConfig.address) {
-            throw new HttpError(`Configuration for chainIdParam ${chainId} is missing or incomplete`, 400);
-        }
-        faucetConfig.rpcUrl = chainConfig.rpcUrl;
-        faucetConfig.address = chainConfig.address;
-    }
-    return faucetConfig;
-}
-
-const getWalletConfig = (runtimeConfig: RuntimeConfig, chainId: string): WalletConfig => {
-    if (chainId && runtimeConfig[chainId]) {
-        console.log(runtimeConfig[chainId]);
-        return runtimeConfig[chainId] as unknown as WalletConfig;
-    }
-    return runtimeConfig.faucet as unknown as WalletConfig;
-}

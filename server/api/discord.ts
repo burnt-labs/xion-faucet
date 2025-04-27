@@ -80,13 +80,13 @@ async function handleFaucetCommand(interaction: any, event: any) {
     const options = interaction.data.options
     const address = options.find((opt: any) => opt.name === "address")?.value;
     const runtimeConfig = useRuntimeConfig(event)
-    const denom = runtimeConfig.public.faucet.denom;
+    const denom = runtimeConfig.public.faucet.denoms;
     const chainId = runtimeConfig.public.faucet.chainId;
     const mention = `<@${interaction.member.user.id}>`;
     const identifiers = [address, interaction.member.user.id];
 
     try {
-        const res = await creditAccount(runtimeConfig, address, denom, chainId, identifiers)
+        const res = await creditAccount(event, address, denom, chainId, identifiers)
         // Follow-up would need to be implemented with a webhook
         // This is simplified for this example
         return Response.json({

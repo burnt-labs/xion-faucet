@@ -1,6 +1,6 @@
 <template>
 	<div v-if="isLoading" class="loading-overlay">
-		<v-img src="./assets/img/shadowy.gif" class="loading-image" />
+		<v-img :src=$config.public.sendImage class="loading-image" />
 	</div>
 	<!-- Step 1: Add your Xion Testnet Address -->
 	<div v-else class="bg-dark-opacity">
@@ -22,11 +22,12 @@
 				<v-col cols="12">
 					<v-card class="mb-12 col-auto" color="lighten-1">
 						<v-text-field v-model="walletAddress" autocomplete="wallet-address" label="Xion Wallet Address"
-							:hint="`Example: ${$config.public[selected]?.address || $config.public.faucet.address}`"
-							required class="col-12" :rules="[
-								(value: string) => !!value || `Required.\n Example: ${$config.public[selected]?.address || $config.public.faucet.address}`,
+							:hint="`Example: ${getConfigAddress()}`" required class="col-12" :rules="[
+								(value: string) => !!value || `Required.\n Example: ${getConfigAddress()}}`,
 								(value: string) => /^(xion)1[a-z0-9]{38,64}$/.test(value) || 'Invalid xion address format.',
 							]" />
+						<v-select v-model="selectedDenom" :items=getConfigTokens() label="Select Denom"
+							required></v-select>
 					</v-card>
 				</v-col>
 			</v-form>
@@ -87,12 +88,10 @@ export default {
 			errorNonExistingAddress: false,
 			errorRecaptcha: false,
 			errorMessage: '',
+			selectedDenom: '',
 			recievedAmount: this.$config.public.faucet.amountGiven,
-			recievedDenom: this.$config.public.faucet.denom,
+			recievedDenom: this.$config.public.faucet.denoms,
 			imageExists: false,
-
-
-
 		};
 	},
 	mounted() {
@@ -131,7 +130,7 @@ export default {
 			this.isLoading = false;
 			this.isSuccess = false;
 			this.recievedAmount = this.$config.public.faucet.amountGiven;
-			this.recievedDenom = this.$config.public.faucet.denom;
+			this.recievedDenom = this.$config.public.faucet.denoms;
 			this.resetForm();
 		},
 		async throwError(message: any, status: null, interval = 10000) {
@@ -164,18 +163,38 @@ export default {
 			this.resetForm();
 		},
 		async fetchApiCredit() {
-			return $fetch.native(`/api/credit?chainId=${this.selected}`, {
+			return $fetch.native(`/api/credit`, {
 				method: 'POST',
 				headers: {
 					'Content-Type': 'application/json',
 				},
 				body: JSON.stringify({
 					token: this.verificationToken,
-					denom: this.$config.public.faucet.denom,
-					address: this.walletAddress
+					denom: this.selectedDenom,
+					address: this.walletAddress,
+					chainId: this.selected,
 				}),
 			});
 		},
+		getChainIndex() {
+			return this.$config.public.faucet.chainId.split(",").indexOf(this.selected)
+		},
+		getConfigTokens() {
+			const index = this.getChainIndex()
+			const chainTokens = this.$config.public.faucet.tokens.split("|").at(index) || ""
+			const chainDenoms = this.$config.public.faucet.denoms.split("|").at(index) || ""
+			const tokens = chainTokens.split(",")
+			const denoms = chainDenoms.split(",")
+			return tokens.map((token, index) => ({
+				title: token,
+				value: denoms[index],
+				selected: index === 0
+			}))
+		},
+		getConfigAddress() {
+			const index = this.getChainIndex()
+			return this.$config.public.faucet.address.split(",").at(index)
+		}
 	}
 };
 </script>

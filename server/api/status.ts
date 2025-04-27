@@ -1,7 +1,6 @@
 import { StargateClient } from '@cosmjs/stargate';
 import { getAvailableTokens, getWallet } from '../utils/utils';
 import { parseBankTokens } from '@cosmjs/faucet/build/tokens';
-import { ChainConfig } from 'nuxt/schema';
 
 export interface StatusResponse {
 	status: string;
@@ -19,28 +18,33 @@ export default defineEventHandler(async (event) => {
 		const faucetConfig = runtimeConfig.public.faucet;
 
 		const url = new URL(event.context.cloudflare.request.url);
-
 		const chainIdParam = url.searchParams.get("chainId");
-		if (chainIdParam) {
-			const chainConfig: ChainConfig = runtimeConfig.public[chainIdParam] as unknown as ChainConfig;
-			if (!chainConfig || !chainConfig.rpcUrl || !chainConfig.address) {
-				throw new Error(`Configuration for chainId ${chainIdParam} is missing or incomplete`);
-			}
-			faucetConfig.rpcUrl = chainConfig.rpcUrl;
-			faucetConfig.address = chainConfig.address;
+		if (!chainIdParam) {
+			return new Response(JSON.stringify({ status: 'error', message: 'Missing chainId parameter' }), {
+				status: 400,
+				headers: { 'Content-Type': 'application/json' },
+			});
 		}
 
-		const { addressPrefix, rpcUrl, tokens } = faucetConfig
-		const chainTokens = parseBankTokens(tokens);
-
-		//console.log(`Fetching status for faucet at ${rpcUrl}`);
-		const pathPattern = runtimeConfig.faucet.pathPattern;
-		let mnemonic = runtimeConfig.faucet.mnemonic;
-		if (chainIdParam && runtimeConfig[chainIdParam] && runtimeConfig[chainIdParam].mnemonic) {
-			mnemonic = runtimeConfig[chainIdParam].mnemonic;
+		const configChainIds = faucetConfig.chainId.split(",");
+		const index = configChainIds.indexOf(chainIdParam);
+		if (index === -1) {
+			return new Response(JSON.stringify({ status: 'error', message: 'Invalid chainId parameter' }), {
+				status: 400,
+				headers: { 'Content-Type': 'application/json' },
+			});
 		}
+
+		// Any of these can be a comma-separated list if multichain
+		const faucetConfigRpcUrl = faucetConfig.rpcUrl.split(",").at(index) || faucetConfig.rpcUrl;
+		const addressPrefix = faucetConfig.addressPrefix.split(",").at(index) || faucetConfig.addressPrefix;
+		const configTokens = faucetConfig.tokens.split("|").at(index) || faucetConfig.tokens;
+		const pathPattern = runtimeConfig.faucet.pathPattern.split(",").at(index) || runtimeConfig.faucet.pathPattern;
+		const mnemonic = runtimeConfig.faucet.mnemonic.split(",").at(index) || runtimeConfig.faucet.mnemonic;
+
+		const chainTokens = parseBankTokens(configTokens);
 		const [client, wallet] = await Promise.all([
-			StargateClient.connect(rpcUrl),
+			StargateClient.connect(faucetConfigRpcUrl),
 			getWallet(mnemonic, pathPattern, addressPrefix, 0)
 		]);
 
@@ -61,7 +65,7 @@ export default defineEventHandler(async (event) => {
 		const responseBody: StatusResponse = {
 			status: 'ok',
 			chainId: chainId,
-			nodeUrl: rpcUrl,
+			nodeUrl: faucetConfigRpcUrl,
 			chainTokens: chainTokens,
 			availableTokens: availableTokens,
 			address: address,

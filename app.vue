@@ -39,8 +39,8 @@ export default {
     return {
       faucetStatus: '',
       faucetStatusColor: '',
-      items: ["xion-testnet-2"],
-      selected: 'xion-testnet-2',
+      items: this.$config.public.faucet.chainId.split(","),
+      selected: this.$config.public.faucet.chainId.split(",")[0],
     };
   },
   watch: {
@@ -83,7 +83,7 @@ export default {
 
 <style scoped>
 .vapp-background {
-  background: url('./assets/img/bg4.png') no-repeat center center;
+  background: url('./assets/img/landing_bg.png') no-repeat center center;
   background-size: cover;
   font-family: 'Nunito', sans-serif;
 }
