@@ -23,7 +23,7 @@
 					<v-card class="mb-12 col-auto" color="lighten-1">
 						<v-text-field v-model="walletAddress" autocomplete="wallet-address" label="Xion Wallet Address"
 							:hint="`Example: ${getConfigAddress()}`" required class="col-12" :rules="[
-								(value: string) => !!value || `Required.\n Example: ${getConfigAddress()}}`,
+								(value: string) => !!value || `Required.\n Example: ${getConfigAddress()}`,
 								(value: string) => /^(xion)1[a-z0-9]{38,64}$/.test(value) || 'Invalid xion address format.',
 							]" />
 						<v-select v-model="selectedDenom" :items=getConfigTokens() label="Select Denom"
