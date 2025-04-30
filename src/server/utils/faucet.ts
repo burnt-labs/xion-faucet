@@ -2,14 +2,13 @@ import {
   isDeliverTxFailure,
   assertIsDeliverTxSuccess,
   calculateFee,
-  DeliverTxResponse,
+  type DeliverTxResponse,
   SigningStargateClient,
 } from "@cosmjs/stargate";
 import { logSendJob } from "@cosmjs/faucet/build/debugging";
 import type { SendJob } from "@cosmjs/faucet/build/types";
-import { parseBankTokens } from "@cosmjs/faucet/build/tokens";
-import { Coin } from "@cosmjs/amino";
-import { FaucetConfig } from "nuxt/schema";
+import type { Coin } from "@cosmjs/amino";
+import type { FaucetConfig } from "nuxt/schema";
 import { Uint53 } from "@cosmjs/math";
 import { getAvailableTokens } from "./utils";
 

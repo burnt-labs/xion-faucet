@@ -1,11 +1,11 @@
 {
   "extends": "./.nuxt/tsconfig.json",
   "compilerOptions": {
-      "types": [
-          "./worker-configuration.d.ts"
-      ]
+    "types": [
+      "./worker-configuration.d.ts"
+    ]
   },
-  "exclude": [
-    "server/reloader"
-  ]
+  "paths": {
+    "@/*": ["./src/*"]
+  }
 }

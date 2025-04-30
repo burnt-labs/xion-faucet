@@ -1,4 +1,4 @@
-import { DiscordUserData } from "nuxt/schema";
+import type { DiscordUserData } from "nuxt/schema";
 
 // Register Discord slash commands with the Discord API
 async function registerDiscordCommands() {

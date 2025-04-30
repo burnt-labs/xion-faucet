@@ -11,9 +11,9 @@
     },
     // Smart Placement
     // Docs: https://developers.cloudflare.com/workers/configuration/smart-placement/#smart-placement
-    // "placement": {
-    //   "mode": "smart"
-    // },
+    "placement": {
+      "mode": "smart"
+    },
     // Bindings
     // Bindings allow your Worker to interact with resources on the Cloudflare Developer Platform, including
     // databases, object storage, AI inference, real-time communication and more.
@@ -44,5 +44,8 @@
         "NUXT_PUBLIC_FAUCET_ADDRESS": "xion1egp7k30mskfxmhy2awk677tnqdl6lfkfxhrwsv",
         "NUXT_PUBLIC_FAUCET_RPC_URL": "https://rpc.xion-testnet-2.burnt.com",
         "NUXT_PUBLIC_TURNSTILE_SITE_KEY": "0x4AAAAAAA5DeCW7T-bO0I0V"
+    },
+    "build": {
+
     }
 }

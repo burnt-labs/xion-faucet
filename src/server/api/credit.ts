@@ -1,7 +1,7 @@
 import { getFaucet } from '../utils/faucet';
 import { isValidAddress } from "../utils/utils";
 import { HttpError as CosmjsHttpError } from "@cosmjs/faucet/build/api/httperror";
-import { H3Event, EventHandlerRequest } from "h3";
+import { H3Event, type EventHandlerRequest } from "h3";
 
 export interface CreditRequestBody {
     readonly denom: string;
@@ -11,9 +11,9 @@ export interface CreditRequestBody {
 }
 
 export class HttpError extends CosmjsHttpError {
-    readonly status: number;
-    readonly message: string;
-    readonly expose: boolean;
+    override readonly status: number;
+    override readonly message: string;
+    override readonly expose: boolean;
     constructor(message: string, status: number, expose?: boolean) {
         super(status, message, expose);
         this.message = message;
@@ -103,7 +103,7 @@ export const creditAccount = async (event: H3Event<EventHandlerRequest>, address
     if (typeof runtimeConfig.faucet.kvStore === 'string') {
         kvStore = event.context.cloudflare.env.NUXT_FAUCET_KV;
     } else {
-        kvStore = runtimeConfig.fuancet.kvStore
+        kvStore = runtimeConfig.faucet.kvStore
     }
 
     if (address !== faucetConfig.address) {

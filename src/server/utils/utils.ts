@@ -3,7 +3,7 @@ import { SigningStargateClient, StargateClient } from "@cosmjs/stargate";
 import { isDefined } from "@cosmjs/utils";
 import { makePathBuilder } from "@cosmjs/faucet/build/pathbuilder";
 import { Secp256k1HdWallet } from "@cosmjs/amino";
-import { OfflineSigner } from "@cosmjs/proto-signing";
+import type { OfflineSigner } from "@cosmjs/proto-signing";
 
 export function isValidAddress(input: string, requiredPrefix: string): boolean {
     try {
