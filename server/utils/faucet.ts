@@ -43,7 +43,7 @@ export class Faucet {
     address: string,
   ) {
     this.config = config;
-    this.bankTokens = parseBankTokens(config.tokens);
+    this.bankTokens = config.denoms.split(",").map((token) => token.trim());
     this.address = address;
     this.client = client;
     if (config.logging === "true") {

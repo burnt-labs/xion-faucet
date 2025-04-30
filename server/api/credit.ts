@@ -37,8 +37,6 @@ const getAcountId = async (kvStore: KVNamespace): Promise<number> => {
 export default defineEventHandler(async (event) => {
     try {
 
-        const cloudflareEnv = event.context.cloudflare.env;
-
         if (event.method !== "POST") {
             throw new HttpError("This endpoint requires a POST request", 405);
         }
@@ -68,7 +66,7 @@ export default defineEventHandler(async (event) => {
         const url = getRequestURL(event);
 
         const identifiers = ipAddress ? [address, ipAddress] : [address];
-        const resultMod = await creditAccount(event, address, denom, identifiers);
+        const resultMod = await creditAccount(event, address, denom, chainId, identifiers);
 
         return new Response(JSON.stringify(resultMod), {
             status: 200,
@@ -115,6 +113,7 @@ export const creditAccount = async (event: H3Event<EventHandlerRequest>, address
     const accountId = await getAcountId(kvStore);
     const faucet = await getFaucet(faucetConfig, mnemonic, pathPattern, accountId);
     const availableTokens = await faucet.availableTokens()
+    console.log(`Available tokens: ${availableTokens}`)
     const matchingDenom = availableTokens.find(
         (availableDenom: string) => availableDenom === denom
     );

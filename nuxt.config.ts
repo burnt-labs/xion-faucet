@@ -39,7 +39,7 @@ export default defineNuxtConfig({
       guildId: getEnvVar("NUXT_DISCORD_GUILD_ID"),
     },
     faucet: {
-      mnemonic: getEnvVar("NUXT_XION_TESTNET_2_MNEMONIC"),
+      mnemonic: getEnvVar("NUXT_FAUCET_MNEMONIC"),
       pathPattern: getEnvVar("NUXT_FAUCET_PATH_PATTERN"),
       kvStore: getEnvVar("NUXT_FAUCET_KV", ""),
     },
