@@ -40,8 +40,9 @@
         "NUXT_PUBLIC_FAUCET_LOGGING": "false",
         "NUXT_PUBLIC_FAUCET_MEMO": "Faucet Transaction",
         "NUXT_PUBLIC_FAUCET_TOKENS": "XION,USDC",
-        "NUXT_PUBLIC_SEND_IMAGE": "/assets/img/shadowy.gif",
+        "NUXT_PUBLIC_SEND_IMAGE": "/stake.png",
         "NUXT_PUBLIC_FAUCET_ADDRESS": "xion1egp7k30mskfxmhy2awk677tnqdl6lfkfxhrwsv",
-        "NUXT_PUBLIC_FAUCET_RPC_URL": "https://rpc.xion-testnet-2.burnt.com"
+        "NUXT_PUBLIC_FAUCET_RPC_URL": "https://rpc.xion-testnet-2.burnt.com",
+        "NUXT_PUBLIC_TURNSTILE_SITE_KEY": "0x4AAAAAAA5DeCW7T-bO0I0V"
     }
 }
