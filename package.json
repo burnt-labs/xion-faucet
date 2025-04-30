@@ -1,30 +1,32 @@
 {
-  "name": "nuxt-app",
-  "private": true,
-  "type": "module",
-  "scripts": {
-    "build": "nuxt build",
-    "dev": "nuxt dev",
-    "generate": "nuxt generate",
-    "preview": "npm run build && wrangler pages dev",
-    "postinstall": "nuxt prepare",
-    "deploy": "npm run build && wrangler pages deploy",
-    "cf-typegen": "wrangler types"
-  },
-  "dependencies": {
-    "@cosmjs/faucet": "^0.32.4",
-    "@cosmjs/stargate": "^0.32.4",
-    "@nuxt/scripts": "^0.9.5",
-    "@nuxtjs/turnstile": "^0.9.11",
-    "momment": "^0.0.1",
-    "nuxt": "^3.15.1",
-    "vue": "latest",
-    "vue-router": "latest",
-    "vuetify-nuxt-module": "^0.18.3"
-  },
-  "devDependencies": {
-    "@cloudflare/workers-types": "^4.20250109.0",
-    "nitro-cloudflare-dev": "^0.2.1",
-    "wrangler": "^3.101.0"
-  }
+	"name": "xion-faucet",
+	"private": true,
+	"type": "module",
+	"scripts": {
+		"build": "nuxt build",
+		"dev": "nuxt dev",
+		"generate": "nuxt generate",
+		"preview": "npm run build && wrangler dev",
+		"postinstall": "nuxt prepare",
+		"deploy": "npm run build && wrangler deploy",
+		"cf-typegen": "wrangler types"
+	},
+	"dependencies": {
+		"@cosmjs/faucet": "^0.32.4",
+		"@cosmjs/stargate": "^0.32.4",
+		"@nuxt/scripts": "^0.11.0",
+		"@nuxtjs/turnstile": "^0.9.11",
+		"discord-interactions": "^4.1.1",
+		"momment": "^0.0.1",
+		"nuxt": "^3.16.2",
+		"vue": "^3.5.13",
+		"vue-router": "^4.5.0",
+		"vuetify-nuxt-module": "^0.18.3"
+	},
+	"devDependencies": {
+		"@cloudflare/workers-types": "^4.20250417.0",
+		"nitro-cloudflare-dev": "^0.2.2",
+		"nitropack": "^2.11.9",
+		"wrangler": "^4.13.2"
+	}
 }

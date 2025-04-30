@@ -1,13 +1,27 @@
 import colors from "vuetify/util/colors";
 import { defineNuxtConfig } from 'nuxt/config'
 
+const getEnvVar = <T>(key: string, defaultValue?: T): T => {
+  const value = process.env[key] !== undefined ? process.env[key] : defaultValue;
+  if (value === undefined) {
+    throw new Error(`Environment variable ${key} is not set and no default value provided`);
+  }
+  return value as T;
+}
+
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
   compatibilityDate: '2024-11-01',
   devtools: { enabled: true },
+  srcDir: "src",
 
   nitro: {
-    preset: "cloudflare-pages"
+    preset: "cloudflare_module",
+
+    cloudflare: {
+      deployConfig: true,
+      nodeCompat: true
+    }
   },
 
   modules: [
@@ -16,46 +30,36 @@ export default defineNuxtConfig({
     '@nuxtjs/turnstile',
   ],
   turnstile: {
-    siteKey: process.env.NUXT_PUBLIC_TURNSTILE_SITE_KEY as string,
+    siteKey: getEnvVar("NUXT_PUBLIC_TURNSTILE_SITE_KEY"),
   },
-
   runtimeConfig: {
+    discord: {
+      appId: getEnvVar("NUXT_DISCORD_APP_ID"),
+      token: getEnvVar("NUXT_DISCORD_TOKEN"),
+      publicKey: getEnvVar("NUXT_DISCORD_PUBLIC_KEY"),
+      guildId: getEnvVar("NUXT_DISCORD_GUILD_ID"),
+    },
     faucet: {
-      mnemonic: process.env.NUXT_FAUCET_MNEMONIC as string,
-      pathPattern: process.env.NUXT_FAUCET_PATH_PATTERN as string,
-      kvStore: process.env.NUXT_FAUCET_KV as unknown as KVNamespace,
-    },
-    turnstile: {
-      secretKey: process.env.NUXT_TURNSTILE_SECRET_KEY as string,
-    },
-    "xion-testnet-1": {
-      mnemonic: process.env.NUXT_XION_TESTNET_1_MNEMONIC as string,
-    },
-    "xion-testnet-2": {
-      mnemonic: process.env.NUXT_XION_TESTNET_2_MNEMONIC as string,
+      mnemonic: getEnvVar("NUXT_FAUCET_MNEMONIC"),
+      pathPattern: getEnvVar("NUXT_FAUCET_PATH_PATTERN"),
+      kvStore: getEnvVar("NUXT_FAUCET_KV", ""),
     },
     public: {
       faucet: {
-        address: process.env.NUXT_PUBLIC_XION_TESTNET_2_ADDRESS as string,
-        addressPrefix: process.env.NUXT_PUBLIC_FAUCET_ADDRESS_PREFIX as string,
-        amountGiven: Number(process.env.NUXT_PUBLIC_FAUCET_AMOUNT_GIVEN),
-        cooldownTime: Number(process.env.NUXT_PUBLIC_FAUCET_COOLDOWN_TIME),
-        denom: process.env.NUXT_PUBLIC_FAUCET_DENOM as string,
-        gasLimit: process.env.NUXT_PUBLIC_FAUCET_GAS_LIMIT as string,
-        gasPrice: process.env.NUXT_PUBLIC_FAUCET_GAS_PRICE as string,
-        logging: process.env.NUXT_PUBLIC_FAUCET_LOGGING as string,
-        memo: process.env.NUXT_PUBLIC_FAUCET_MEMO as string,
-        rpcUrl: process.env.NUXT_PUBLIC_XION_TESTNET_2_RPC_URL as string,
-        tokens: process.env.NUXT_PUBLIC_FAUCET_TOKENS as string,
+        address: getEnvVar("NUXT_PUBLIC_FAUCET_ADDRESS"),
+        addressPrefix: getEnvVar("NUXT_PUBLIC_FAUCET_ADDRESS_PREFIX"),
+        amountGiven: getEnvVar("NUXT_PUBLIC_FAUCET_AMOUNT_GIVEN"),
+        chainId: getEnvVar("NUXT_PUBLIC_DEFAULT_CHAIN_ID"),
+        cooldownTime: getEnvVar("NUXT_PUBLIC_FAUCET_COOLDOWN_TIME"),
+        denoms: getEnvVar("NUXT_PUBLIC_FAUCET_DENOM"),
+        gasLimit: getEnvVar("NUXT_PUBLIC_FAUCET_GAS_LIMIT"),
+        gasPrice: getEnvVar("NUXT_PUBLIC_FAUCET_GAS_PRICE"),
+        logging: getEnvVar("NUXT_PUBLIC_FAUCET_LOGGING"),
+        memo: getEnvVar("NUXT_PUBLIC_FAUCET_MEMO"),
+        rpcUrl: getEnvVar("NUXT_PUBLIC_FAUCET_RPC_URL"),
+        tokens: getEnvVar("NUXT_PUBLIC_FAUCET_TOKENS"),
       },
-      "xion-testnet-1": {
-        address: process.env.NUXT_PUBLIC_XION_TESTNET_1_ADDRESS as string,
-        rpcUrl: process.env.NUXT_PUBLIC_XION_TESTNET_1_RPC_URL as string,
-      },
-      "xion-testnet-2": {
-        address: process.env.NUXT_PUBLIC_XION_TESTNET_2_ADDRESS as string,
-        rpcUrl: process.env.NUXT_PUBLIC_XION_TESTNET_2_RPC_URL as string,
-      }
+      sendImage: getEnvVar("NUXT_PUBLIC_SEND_IMAGE"),
     },
   },
   vuetify: {

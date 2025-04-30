@@ -1,4 +1,4 @@
-/// <reference types="@cloudflare/workers-types/2023-07-01" />
+import type { Request, Env, ExecutionContext, CfProperties } from "@cloudflare/workers-types";
 
 declare module "h3" {
   interface H3EventContext {
@@ -6,7 +6,7 @@ declare module "h3" {
     cloudflare: {
       request: Request;
       env: Env;
-      context: ExecutionContext
+      context: ExecutionContext;
     };
   }
 }
