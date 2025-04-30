@@ -65,7 +65,7 @@ export default defineEventHandler(async (event) => {
         const ipAddress = getRequestIP(event, { xForwardedFor: true });
         const url = getRequestURL(event);
 
-        const identifiers = ipAddress ? [address, ipAddress] : [address];
+        const identifiers = ipAddress ? [`${chainId}.${denom}.${address}`, `${chainId}.${denom}.${ipAddress}`] : [`${chainId}.${denom}.${address}`];
         const resultMod = await creditAccount(event, address, denom, chainId, identifiers);
 
         return new Response(JSON.stringify(resultMod), {
@@ -136,6 +136,7 @@ export const creditAccount = async (event: H3Event<EventHandlerRequest>, address
 
     if (address !== faucetConfig.address) {
         for (const identifier of identifiers) {
+            console.log(`Adding entry to KV store for ${identifier}`);
             await kvStore.put(identifier, new Date().toISOString(), { expirationTtl: cooldownTime });
         }
     }
@@ -144,9 +145,10 @@ export const creditAccount = async (event: H3Event<EventHandlerRequest>, address
 };
 
 const checkKvStore = async (kvStore: KVNamespace, cooldownTime: number, identifiers: string[]) => {
-    for (const identifier in identifiers) {
+    for (const identifier of identifiers) {
         const addEntry = await kvStore.get(identifier);
-        if (addEntry === null) {
+        console.log(`Checked KV store for ${identifier}: ${addEntry}`);
+        if (addEntry !== null) {
             const entryDate = new Date(identifier);
             const currentDate = new Date();
             const cooldownEnd = new Date(entryDate.getTime() + cooldownTime * 1000);
