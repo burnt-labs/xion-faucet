@@ -33,6 +33,9 @@ export default defineNuxtConfig({
     siteKey: getEnvVar("NUXT_PUBLIC_TURNSTILE_SITE_KEY"),
   },
   runtimeConfig: {
+    turnstile: {
+      secretKey: getEnvVar("NUXT_TURNSTILE_SECRET_KEY"),
+    },
     discord: {
       appId: getEnvVar("NUXT_DISCORD_APP_ID"),
       token: getEnvVar("NUXT_DISCORD_TOKEN"),
@@ -43,6 +46,7 @@ export default defineNuxtConfig({
       mnemonic: getEnvVar("NUXT_FAUCET_MNEMONIC"),
       pathPattern: getEnvVar("NUXT_FAUCET_PATH_PATTERN"),
       kvStore: getEnvVar("NUXT_FAUCET_KV", ""),
+      accounts: getEnvVar("NUXT_FAUCET_ACCOUNTS", 20),
     },
     public: {
       faucet: {

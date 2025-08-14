@@ -33,6 +33,7 @@ declare module 'nuxt/schema' {
         mnemonic: string;
         pathPattern: string;
         kvStore: KVNamespace | string;
+        accounts: number;
     }
 
     interface DiscordConfig {

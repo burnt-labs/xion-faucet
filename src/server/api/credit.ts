@@ -22,15 +22,15 @@ export class HttpError extends CosmjsHttpError {
     }
 }
 
-const getAcountId = async (kvStore: KVNamespace): Promise<number> => {
-    const acctNum = Math.floor(Math.random() * 15) + 1;
+const getAcountId = async (kvStore: KVNamespace, accounts: number): Promise<number> => {
+    const acctNum = Math.floor(Math.random() * accounts) + 1;
     const acctKey = `account${acctNum.toString().padStart(3, "0")}`;
     const entry = await kvStore.getWithMetadata(acctKey);
     if (entry.value === null) {
         await kvStore.put(acctKey, new Date().toISOString(), { expirationTtl: 60 });
         return acctNum
     }
-    return await getAcountId(kvStore);
+    return await getAcountId(kvStore, accounts);
 }
 
 //export const onRequest: PagesFunction<Env> = async (context): Promise<Response> => {
@@ -110,7 +110,10 @@ export const creditAccount = async (event: H3Event<EventHandlerRequest>, address
         await checkKvStore(kvStore, cooldownTime, identifiers);
     }
 
-    const accountId = await getAcountId(kvStore);
+    // Use account id unless accounts is set to 0
+    const numAccounts = runtimeConfig.faucet.accounts
+    const accountId = numAccounts <= 0 ? 0 : await getAcountId(kvStore, numAccounts);
+
     const faucet = await getFaucet(faucetConfig, mnemonic, pathPattern, accountId);
     const availableTokens = await faucet.availableTokens()
     console.log(`Available tokens: ${availableTokens}`)
