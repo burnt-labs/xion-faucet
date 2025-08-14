@@ -12,7 +12,7 @@
 		"cf-typegen": "wrangler types"
 	},
 	"dependencies": {
-		"@cosmjs/faucet": "^0.32.4",
+		"@cosmjs/faucet": "^0.36.0",
 		"@cosmjs/stargate": "^0.32.4",
 		"@nuxt/scripts": "^0.11.0",
 		"@nuxtjs/turnstile": "^0.9.11",
