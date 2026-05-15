@@ -20,6 +20,8 @@ jobs:
         with:
           node-version: lts/*
           cache: npm
+      - name: Seed build-time env from .env.example
+        run: cp .env.example .env
       - run: npm ci
       - run: npm run build
 
