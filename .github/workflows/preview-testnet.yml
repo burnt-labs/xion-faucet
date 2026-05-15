@@ -61,6 +61,7 @@ jobs:
             const pr = context.payload.pull_request
             const sha = pr?.head?.sha ?? context.sha
             const marker = `<!-- testnet-preview:${sha} -->`
+            core.info(`event: ${context.eventName}, sha: ${sha}, pr: ${pr?.number ?? 'none'}, url: ${url}`)
             const body = [
               marker,
               `### Testnet preview ready`,
@@ -72,52 +73,70 @@ jobs:
             ].join('\n')
 
             async function upsertCommitComment(commitSha) {
-              const { data: existing } = await github.rest.repos.listCommentsForCommit({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                commit_sha: commitSha,
-                per_page: 100,
-              })
-              const prev = existing.find((c) => c.body && c.body.includes(marker))
-              if (prev) {
-                await github.rest.repos.updateCommitComment({
-                  owner: context.repo.owner,
-                  repo: context.repo.repo,
-                  comment_id: prev.id,
-                  body,
-                })
-              } else {
-                await github.rest.repos.createCommitComment({
+              core.info(`upsertCommitComment(${commitSha})`)
+              try {
+                const { data: existing } = await github.rest.repos.listCommentsForCommit({
                   owner: context.repo.owner,
                   repo: context.repo.repo,
                   commit_sha: commitSha,
-                  body,
+                  per_page: 100,
                 })
+                core.info(`  found ${existing.length} existing commit comments`)
+                const prev = existing.find((c) => c.body && c.body.includes(marker))
+                if (prev) {
+                  core.info(`  updating existing comment ${prev.id}`)
+                  await github.rest.repos.updateCommitComment({
+                    owner: context.repo.owner,
+                    repo: context.repo.repo,
+                    comment_id: prev.id,
+                    body,
+                  })
+                } else {
+                  core.info(`  creating new commit comment`)
+                  const { data: created } = await github.rest.repos.createCommitComment({
+                    owner: context.repo.owner,
+                    repo: context.repo.repo,
+                    commit_sha: commitSha,
+                    body,
+                  })
+                  core.info(`  created comment ${created.id} at ${created.html_url}`)
+                }
+              } catch (err) {
+                core.warning(`upsertCommitComment failed: ${err.status} ${err.message}`)
               }
             }
 
             async function upsertPrComment(prNumber) {
-              const { data: existing } = await github.rest.issues.listComments({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                issue_number: prNumber,
-                per_page: 100,
-              })
-              const prev = existing.find((c) => c.body && c.body.includes(marker))
-              if (prev) {
-                await github.rest.issues.updateComment({
-                  owner: context.repo.owner,
-                  repo: context.repo.repo,
-                  comment_id: prev.id,
-                  body,
-                })
-              } else {
-                await github.rest.issues.createComment({
+              core.info(`upsertPrComment(${prNumber})`)
+              try {
+                const { data: existing } = await github.rest.issues.listComments({
                   owner: context.repo.owner,
                   repo: context.repo.repo,
                   issue_number: prNumber,
-                  body,
+                  per_page: 100,
                 })
+                core.info(`  found ${existing.length} existing PR comments`)
+                const prev = existing.find((c) => c.body && c.body.includes(marker))
+                if (prev) {
+                  core.info(`  updating existing comment ${prev.id}`)
+                  await github.rest.issues.updateComment({
+                    owner: context.repo.owner,
+                    repo: context.repo.repo,
+                    comment_id: prev.id,
+                    body,
+                  })
+                } else {
+                  core.info(`  creating new PR comment`)
+                  const { data: created } = await github.rest.issues.createComment({
+                    owner: context.repo.owner,
+                    repo: context.repo.repo,
+                    issue_number: prNumber,
+                    body,
+                  })
+                  core.info(`  created comment ${created.id} at ${created.html_url}`)
+                }
+              } catch (err) {
+                core.warning(`upsertPrComment failed: ${err.status} ${err.message}`)
               }
             }
 
