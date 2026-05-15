@@ -33,7 +33,7 @@ jobs:
         with:
           apiToken: ${{ secrets.BURNT_CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.BURNT_CLOUDFLARE_ACCOUNT_ID }}
-          command: versions upload --env testnet --message "PR preview ${{ github.sha }}"
+          command: versions upload --message "PR preview ${{ github.sha }}"
           packageManager: npm
       - name: Extract version ID and preview URL
         id: extract

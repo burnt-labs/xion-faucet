@@ -11,24 +11,13 @@
   "placement": {
     "mode": "smart"
   },
-  "env": {
-    "testnet": {
-      "name": "xion-faucet",
-      "routes": [
-        { "pattern": "faucet.xion.burnt.com", "custom_domain": true }
-      ],
-      "kv_namespaces": [
-        {
-          "binding": "NUXT_FAUCET_KV",
-          "id": "8fc4aa2c7fe640c3911c853d81e298d9"
-        }
-      ],
-      "placement": {
-        "mode": "smart"
-      },
-      "observability": {
-        "enabled": true
-      }
+  "routes": [
+    { "pattern": "faucet.xion.burnt.com", "custom_domain": true }
+  ],
+  "kv_namespaces": [
+    {
+      "binding": "NUXT_FAUCET_KV",
+      "id": "8fc4aa2c7fe640c3911c853d81e298d9"
     }
-  }
+  ]
 }

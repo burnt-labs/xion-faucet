@@ -9,7 +9,7 @@
     "preview": "npm run build && wrangler dev",
     "postinstall": "nuxt prepare",
     "deploy": "npm run deploy:testnet",
-    "deploy:testnet": "npm run build && wrangler deploy --env testnet",
+    "deploy:testnet": "npm run build && wrangler deploy",
     "cf-typegen": "wrangler types"
   },
   "dependencies": {
