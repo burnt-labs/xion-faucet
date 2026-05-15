@@ -23,8 +23,32 @@ jobs:
         with:
           node-version: lts/*
           cache: npm
-      - name: Seed build-time env from .env.example
-        run: cp .env.example .env
+      - name: Write build-time env from GH Variables
+        run: |
+          cat > .env <<EOF
+          NUXT_PUBLIC_TURNSTILE_SITE_KEY=${{ vars.NUXT_PUBLIC_TURNSTILE_SITE_KEY }}
+          NUXT_PUBLIC_FAUCET_ADDRESS=${{ vars.NUXT_PUBLIC_FAUCET_ADDRESS }}
+          NUXT_PUBLIC_FAUCET_ADDRESS_PREFIX=${{ vars.NUXT_PUBLIC_FAUCET_ADDRESS_PREFIX }}
+          NUXT_PUBLIC_FAUCET_AMOUNT_GIVEN=${{ vars.NUXT_PUBLIC_FAUCET_AMOUNT_GIVEN }}
+          NUXT_PUBLIC_DEFAULT_CHAIN_ID=${{ vars.NUXT_PUBLIC_DEFAULT_CHAIN_ID }}
+          NUXT_PUBLIC_FAUCET_COOLDOWN_TIME=${{ vars.NUXT_PUBLIC_FAUCET_COOLDOWN_TIME }}
+          NUXT_PUBLIC_FAUCET_DENOM=${{ vars.NUXT_PUBLIC_FAUCET_DENOM }}
+          NUXT_PUBLIC_FAUCET_GAS_LIMIT=${{ vars.NUXT_PUBLIC_FAUCET_GAS_LIMIT }}
+          NUXT_PUBLIC_FAUCET_GAS_PRICE=${{ vars.NUXT_PUBLIC_FAUCET_GAS_PRICE }}
+          NUXT_PUBLIC_FAUCET_LOGGING=${{ vars.NUXT_PUBLIC_FAUCET_LOGGING }}
+          NUXT_PUBLIC_FAUCET_MEMO=${{ vars.NUXT_PUBLIC_FAUCET_MEMO }}
+          NUXT_PUBLIC_FAUCET_RPC_URL=${{ vars.NUXT_PUBLIC_FAUCET_RPC_URL }}
+          NUXT_PUBLIC_FAUCET_TOKENS=${{ vars.NUXT_PUBLIC_FAUCET_TOKENS }}
+          NUXT_PUBLIC_SEND_IMAGE=${{ vars.NUXT_PUBLIC_SEND_IMAGE }}
+          NUXT_DISCORD_APP_ID=${{ vars.NUXT_DISCORD_APP_ID }}
+          NUXT_DISCORD_GUILD_ID=${{ vars.NUXT_DISCORD_GUILD_ID }}
+          NUXT_DISCORD_PUBLIC_KEY=${{ vars.NUXT_DISCORD_PUBLIC_KEY }}
+          NUXT_FAUCET_KV=${{ vars.NUXT_FAUCET_KV }}
+          NUXT_DISCORD_TOKEN=build-placeholder-overridden-by-cf-worker-secret
+          NUXT_FAUCET_MNEMONIC=test test test test test test test test test test test junk
+          NUXT_FAUCET_PATH_PATTERN=build-placeholder-overridden-by-cf-worker-secret
+          NUXT_TURNSTILE_SECRET_KEY=1x0000000000000000000000000000000AA
+          EOF
       - run: npm ci
       - run: npm run build
       - name: Upload testnet preview version
