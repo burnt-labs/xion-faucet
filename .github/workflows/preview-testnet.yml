@@ -1,0 +1,130 @@
+name: Preview Testnet
+
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  deployments: write
+  issues: write
+  pull-requests: write
+
+jobs:
+  preview-testnet:
+    runs-on: ubuntu-latest
+    environment:
+      name: preview-testnet
+      url: ${{ steps.extract.outputs.preview_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: lts/*
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+      - name: Upload testnet preview version
+        id: preview
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.BURNT_CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.BURNT_CLOUDFLARE_ACCOUNT_ID }}
+          command: versions upload --env testnet --message "PR preview ${{ github.sha }}"
+          packageManager: npm
+      - name: Extract version ID and preview URL
+        id: extract
+        env:
+          OUTPUT: ${{ steps.preview.outputs.command-output }}
+        run: |
+          VERSION_ID=$(echo "$OUTPUT" | grep -oP 'Version ID:\s+\K[a-f0-9-]+' || echo '')
+          PREVIEW_URL=$(echo "$OUTPUT" | grep -oP 'https://[^\s]+\.workers\.dev[^\s]*' | head -1 || echo '')
+
+          if [ -z "$PREVIEW_URL" ] && [ -n "$VERSION_ID" ]; then
+            SHORT_VERSION_ID=$(echo "$VERSION_ID" | cut -d'-' -f1)
+            PREVIEW_URL="https://${SHORT_VERSION_ID}-xion-faucet.burnt.workers.dev"
+          fi
+
+          echo "version_id=${VERSION_ID:-unknown}" >> "$GITHUB_OUTPUT"
+          echo "preview_url=$PREVIEW_URL" >> "$GITHUB_OUTPUT"
+      - name: Surface preview URL on commit and PR
+        if: steps.extract.outputs.preview_url != ''
+        continue-on-error: true
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const url = `${{ steps.extract.outputs.preview_url }}`
+            const versionId = `${{ steps.extract.outputs.version_id }}`
+            const marker = `<!-- testnet-preview:${context.sha} -->`
+            const body = [
+              marker,
+              `### Testnet preview ready`,
+              ``,
+              `- Preview: ${url}`,
+              `- Version: \`${versionId}\``,
+              ``,
+              `Runs against testnet bindings (KV, env vars, secrets) on a versioned worker URL. Canonical \`faucet.xion.burnt.com\` traffic is unchanged until the PR merges.`,
+            ].join('\n')
+
+            async function upsertCommitComment() {
+              const { data: existing } = await github.rest.repos.listCommentsForCommit({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                commit_sha: context.sha,
+                per_page: 100,
+              })
+              const prev = existing.find((c) => c.body && c.body.includes(marker))
+              if (prev) {
+                await github.rest.repos.updateCommitComment({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  comment_id: prev.id,
+                  body,
+                })
+              } else {
+                await github.rest.repos.createCommitComment({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  commit_sha: context.sha,
+                  body,
+                })
+              }
+            }
+
+            async function upsertPrComment(prNumber) {
+              const { data: existing } = await github.rest.issues.listComments({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: prNumber,
+                per_page: 100,
+              })
+              const prev = existing.find((c) => c.body && c.body.includes(marker))
+              if (prev) {
+                await github.rest.issues.updateComment({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  comment_id: prev.id,
+                  body,
+                })
+              } else {
+                await github.rest.issues.createComment({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: prNumber,
+                  body,
+                })
+              }
+            }
+
+            await upsertCommitComment()
+
+            const { data: prs } = await github.rest.repos.listPullRequestsAssociatedWithCommit({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              commit_sha: context.sha,
+            })
+            for (const pr of prs) {
+              if (pr.state !== 'open') continue
+              await upsertPrComment(pr.number)
+            }
