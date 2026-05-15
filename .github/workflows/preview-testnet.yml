@@ -58,7 +58,9 @@ jobs:
           script: |
             const url = `${{ steps.extract.outputs.preview_url }}`
             const versionId = `${{ steps.extract.outputs.version_id }}`
-            const marker = `<!-- testnet-preview:${context.sha} -->`
+            const pr = context.payload.pull_request
+            const sha = pr?.head?.sha ?? context.sha
+            const marker = `<!-- testnet-preview:${sha} -->`
             const body = [
               marker,
               `### Testnet preview ready`,
@@ -69,11 +71,11 @@ jobs:
               `Runs against testnet bindings (KV, env vars, secrets) on a versioned worker URL. Canonical \`faucet.xion.burnt.com\` traffic is unchanged until the PR merges.`,
             ].join('\n')
 
-            async function upsertCommitComment() {
+            async function upsertCommitComment(commitSha) {
               const { data: existing } = await github.rest.repos.listCommentsForCommit({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
-                commit_sha: context.sha,
+                commit_sha: commitSha,
                 per_page: 100,
               })
               const prev = existing.find((c) => c.body && c.body.includes(marker))
@@ -88,7 +90,7 @@ jobs:
                 await github.rest.repos.createCommitComment({
                   owner: context.repo.owner,
                   repo: context.repo.repo,
-                  commit_sha: context.sha,
+                  commit_sha: commitSha,
                   body,
                 })
               }
@@ -119,14 +121,19 @@ jobs:
               }
             }
 
-            await upsertCommitComment()
+            await upsertCommitComment(sha)
 
-            const { data: prs } = await github.rest.repos.listPullRequestsAssociatedWithCommit({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              commit_sha: context.sha,
-            })
-            for (const pr of prs) {
-              if (pr.state !== 'open') continue
-              await upsertPrComment(pr.number)
+            let prNumbers = []
+            if (pr) {
+              prNumbers = [pr.number]
+            } else {
+              const { data: prs } = await github.rest.repos.listPullRequestsAssociatedWithCommit({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                commit_sha: sha,
+              })
+              prNumbers = prs.filter((p) => p.state === 'open').map((p) => p.number)
+            }
+            for (const prNumber of prNumbers) {
+              await upsertPrComment(prNumber)
             }
