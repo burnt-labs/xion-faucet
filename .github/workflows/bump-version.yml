@@ -1,0 +1,61 @@
+name: Bump version
+
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: write
+
+jobs:
+  bump:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: lts/*
+
+      - name: Bump package.json to match published release
+        env:
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
+        run: |
+          VERSION="${RELEASE_TAG#v}"
+
+          if ! [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "Tag '$RELEASE_TAG' is not a clean M.M.P version; skipping bump."
+            exit 0
+          fi
+
+          CURRENT=$(node -p "require('./package.json').version")
+          GREATER=$(node -p "((a,b)=>{const pa=a.split('.').map(Number),pb=b.split('.').map(Number);for(let i=0;i<3;i++){if(pa[i]!==pb[i])return pa[i]>pb[i];}return false})('${VERSION}','${CURRENT}')")
+          if [ "$GREATER" != "true" ]; then
+            echo "Published tag '${VERSION}' is not strictly greater than current package.json version '${CURRENT}'; refusing to write. This usually means a stale draft was published after main moved forward."
+            exit 0
+          fi
+
+          node -e "const p=require('./package.json'); p.version='${VERSION}'; require('fs').writeFileSync('./package.json', JSON.stringify(p, null, 2) + '\n')"
+
+          if git diff --quiet package.json; then
+            echo "package.json already at ${VERSION}; nothing to commit."
+            exit 0
+          fi
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          git add package.json
+          git commit -m "chore: bump package.json to ${VERSION} [skip ci]"
+
+          for attempt in 1 2 3; do
+            if git push origin HEAD:main; then
+              break
+            fi
+            echo "Push attempt ${attempt} failed; rebasing on origin/main and retrying"
+            git fetch origin main
+            git rebase origin/main || { echo "rebase failed; bailing"; exit 1; }
+          done

@@ -1,7 +1,8 @@
 name: Deploy Testnet
 
 on:
-  workflow_call:
+  release:
+    types: [published]
   workflow_dispatch:
 
 permissions:
@@ -9,7 +10,19 @@ permissions:
   deployments: write
 
 jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: lts/*
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+
   deploy-testnet:
+    needs: check
     runs-on: ubuntu-latest
     environment:
       name: testnet

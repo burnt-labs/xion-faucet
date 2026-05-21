@@ -7,8 +7,10 @@ on:
 
 permissions:
   actions: read
-  contents: read
+  contents: write
   deployments: write
+  issues: write
+  pull-requests: write
 
 jobs:
   check:
@@ -49,7 +51,12 @@ jobs:
       - run: npm ci
       - run: npm run build
 
-  deploy-testnet:
+  preview-testnet:
     needs: check
-    uses: ./.github/workflows/deploy-testnet.yml
+    uses: ./.github/workflows/preview-testnet.yml
+    secrets: inherit
+
+  release:
+    needs: preview-testnet
+    uses: ./.github/workflows/release.yml
     secrets: inherit
