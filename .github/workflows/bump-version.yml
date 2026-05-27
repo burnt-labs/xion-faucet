@@ -31,10 +31,14 @@ jobs:
             exit 0
           fi
 
+          # DO-315: downgrade guard must use strict less-than. Earlier shape
+          # used GREATER which fired on both less-than AND equal-to,
+          # producing a misleading "stale draft" log on equality. Equality
+          # now falls through to the no-op block below which logs correctly.
           CURRENT=$(node -p "require('./package.json').version")
-          GREATER=$(node -p "((a,b)=>{const pa=a.split('.').map(Number),pb=b.split('.').map(Number);for(let i=0;i<3;i++){if(pa[i]!==pb[i])return pa[i]>pb[i];}return false})('${VERSION}','${CURRENT}')")
-          if [ "$GREATER" != "true" ]; then
-            echo "Published tag '${VERSION}' is not strictly greater than current package.json version '${CURRENT}'; refusing to write. This usually means a stale draft was published after main moved forward."
+          LESS=$(node -p "((a,b)=>{const pa=a.split('.').map(Number),pb=b.split('.').map(Number);for(let i=0;i<3;i++){if(pa[i]!==pb[i])return pa[i]<pb[i];}return false})('${VERSION}','${CURRENT}')")
+          if [ "$LESS" = "true" ]; then
+            echo "Published tag '${VERSION}' is less than current package.json version '${CURRENT}'; refusing to write. This usually means a stale draft was published after main moved forward."
             exit 0
           fi
 

@@ -15,7 +15,14 @@ permissions:
 
 jobs:
   preview-testnet:
-    if: github.event_name != 'pull_request' || github.event.pull_request.draft == false
+    # Skip draft PRs AND fork PRs (DO-315 fork-PR guard sweep). Testnet
+    # secrets are lower-risk than mainnet, but the symmetry keeps fork
+    # PRs from reaching any Burnt CI secrets at all. workflow_call from
+    # merge-pr.yml leaves pull_request context empty → first disjunct holds.
+    if: >
+      github.event_name != 'pull_request' ||
+      (github.event.pull_request.draft == false &&
+       github.event.pull_request.head.repo.fork == false)
     runs-on: ubuntu-latest
     environment:
       name: preview-testnet
