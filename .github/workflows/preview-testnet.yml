@@ -1,0 +1,192 @@
+name: Preview Testnet
+
+on:
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize, reopened, ready_for_review]
+  workflow_call:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  deployments: write
+  issues: write
+  pull-requests: write
+
+jobs:
+  preview-testnet:
+    # Skip draft PRs AND fork PRs (DO-315 fork-PR guard sweep). Testnet
+    # secrets are lower-risk than mainnet, but the symmetry keeps fork
+    # PRs from reaching any Burnt CI secrets at all. workflow_call from
+    # merge-pr.yml leaves pull_request context empty → first disjunct holds.
+    if: >
+      github.event_name != 'pull_request' ||
+      (github.event.pull_request.draft == false &&
+       github.event.pull_request.head.repo.fork == false)
+    runs-on: ubuntu-latest
+    environment:
+      name: preview-testnet
+      url: ${{ steps.extract.outputs.preview_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: lts/*
+          cache: npm
+      - name: Write build-time env from GH Variables
+        run: |
+          cat > .env <<EOF
+          NUXT_PUBLIC_TURNSTILE_SITE_KEY=${{ vars.NUXT_PUBLIC_TURNSTILE_SITE_KEY }}
+          NUXT_PUBLIC_FAUCET_ADDRESS=${{ vars.NUXT_PUBLIC_FAUCET_ADDRESS }}
+          NUXT_PUBLIC_FAUCET_ADDRESS_PREFIX=${{ vars.NUXT_PUBLIC_FAUCET_ADDRESS_PREFIX }}
+          NUXT_PUBLIC_FAUCET_AMOUNT_GIVEN=${{ vars.NUXT_PUBLIC_FAUCET_AMOUNT_GIVEN }}
+          NUXT_PUBLIC_DEFAULT_CHAIN_ID=${{ vars.NUXT_PUBLIC_DEFAULT_CHAIN_ID }}
+          NUXT_PUBLIC_FAUCET_COOLDOWN_TIME=${{ vars.NUXT_PUBLIC_FAUCET_COOLDOWN_TIME }}
+          NUXT_PUBLIC_FAUCET_DENOM=${{ vars.NUXT_PUBLIC_FAUCET_DENOM }}
+          NUXT_PUBLIC_FAUCET_GAS_LIMIT=${{ vars.NUXT_PUBLIC_FAUCET_GAS_LIMIT }}
+          NUXT_PUBLIC_FAUCET_GAS_PRICE=${{ vars.NUXT_PUBLIC_FAUCET_GAS_PRICE }}
+          NUXT_PUBLIC_FAUCET_LOGGING=${{ vars.NUXT_PUBLIC_FAUCET_LOGGING }}
+          NUXT_PUBLIC_FAUCET_MEMO=${{ vars.NUXT_PUBLIC_FAUCET_MEMO }}
+          NUXT_PUBLIC_FAUCET_RPC_URL=${{ vars.NUXT_PUBLIC_FAUCET_RPC_URL }}
+          NUXT_PUBLIC_FAUCET_TOKENS=${{ vars.NUXT_PUBLIC_FAUCET_TOKENS }}
+          NUXT_PUBLIC_SEND_IMAGE=${{ vars.NUXT_PUBLIC_SEND_IMAGE }}
+          NUXT_DISCORD_APP_ID=${{ vars.NUXT_DISCORD_APP_ID }}
+          NUXT_DISCORD_GUILD_ID=${{ vars.NUXT_DISCORD_GUILD_ID }}
+          NUXT_DISCORD_PUBLIC_KEY=${{ vars.NUXT_DISCORD_PUBLIC_KEY }}
+          NUXT_FAUCET_KV=${{ vars.NUXT_FAUCET_KV }}
+          NUXT_DISCORD_TOKEN=build-placeholder-overridden-by-cf-worker-secret
+          NUXT_FAUCET_MNEMONIC=test test test test test test test test test test test junk
+          NUXT_FAUCET_PATH_PATTERN=build-placeholder-overridden-by-cf-worker-secret
+          NUXT_TURNSTILE_SECRET_KEY=1x0000000000000000000000000000000AA
+          EOF
+      - run: npm ci
+      - run: npm run build
+      - name: Upload testnet preview version
+        id: preview
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.BURNT_CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.BURNT_CLOUDFLARE_ACCOUNT_ID }}
+          command: versions upload --message "PR preview ${{ github.sha }}"
+          packageManager: npm
+      - name: Extract version ID and preview URL
+        id: extract
+        env:
+          OUTPUT: ${{ steps.preview.outputs.command-output }}
+        run: |
+          VERSION_ID=$(echo "$OUTPUT" | grep -oP 'Version ID:\s+\K[a-f0-9-]+' || echo '')
+          PREVIEW_URL=$(echo "$OUTPUT" | grep -oP 'https://[^\s]+\.workers\.dev[^\s]*' | head -1 || echo '')
+
+          if [ -z "$PREVIEW_URL" ] && [ -n "$VERSION_ID" ]; then
+            SHORT_VERSION_ID=$(echo "$VERSION_ID" | cut -d'-' -f1)
+            PREVIEW_URL="https://${SHORT_VERSION_ID}-xion-faucet.burnt.workers.dev"
+          fi
+
+          echo "version_id=${VERSION_ID:-unknown}" >> "$GITHUB_OUTPUT"
+          echo "preview_url=$PREVIEW_URL" >> "$GITHUB_OUTPUT"
+      - name: Surface preview URL on commit and PR
+        if: steps.extract.outputs.preview_url != ''
+        continue-on-error: true
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const url = `${{ steps.extract.outputs.preview_url }}`
+            const versionId = `${{ steps.extract.outputs.version_id }}`
+            const pr = context.payload.pull_request
+            const sha = pr?.head?.sha ?? context.sha
+            const marker = `<!-- testnet-preview:${sha} -->`
+            core.info(`event: ${context.eventName}, sha: ${sha}, pr: ${pr?.number ?? 'none'}, url: ${url}`)
+            const body = [
+              marker,
+              `### Testnet preview ready`,
+              ``,
+              `- Preview: ${url}`,
+              `- Version: \`${versionId}\``,
+              ``,
+              `Runs against testnet bindings (KV, env vars, secrets) on a versioned worker URL. Canonical \`faucet.xion.burnt.com\` traffic is unchanged until the PR merges.`,
+            ].join('\n')
+
+            async function upsertCommitComment(commitSha) {
+              core.info(`upsertCommitComment(${commitSha})`)
+              try {
+                const { data: existing } = await github.rest.repos.listCommentsForCommit({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  commit_sha: commitSha,
+                  per_page: 100,
+                })
+                core.info(`  found ${existing.length} existing commit comments`)
+                const prev = existing.find((c) => c.body && c.body.includes(marker))
+                if (prev) {
+                  core.info(`  updating existing comment ${prev.id}`)
+                  await github.rest.repos.updateCommitComment({
+                    owner: context.repo.owner,
+                    repo: context.repo.repo,
+                    comment_id: prev.id,
+                    body,
+                  })
+                } else {
+                  core.info(`  creating new commit comment`)
+                  const { data: created } = await github.rest.repos.createCommitComment({
+                    owner: context.repo.owner,
+                    repo: context.repo.repo,
+                    commit_sha: commitSha,
+                    body,
+                  })
+                  core.info(`  created comment ${created.id} at ${created.html_url}`)
+                }
+              } catch (err) {
+                core.warning(`upsertCommitComment failed: ${err.status} ${err.message}`)
+              }
+            }
+
+            async function upsertPrComment(prNumber) {
+              core.info(`upsertPrComment(${prNumber})`)
+              try {
+                const { data: existing } = await github.rest.issues.listComments({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: prNumber,
+                  per_page: 100,
+                })
+                core.info(`  found ${existing.length} existing PR comments`)
+                const prev = existing.find((c) => c.body && c.body.includes(marker))
+                if (prev) {
+                  core.info(`  updating existing comment ${prev.id}`)
+                  await github.rest.issues.updateComment({
+                    owner: context.repo.owner,
+                    repo: context.repo.repo,
+                    comment_id: prev.id,
+                    body,
+                  })
+                } else {
+                  core.info(`  creating new PR comment`)
+                  const { data: created } = await github.rest.issues.createComment({
+                    owner: context.repo.owner,
+                    repo: context.repo.repo,
+                    issue_number: prNumber,
+                    body,
+                  })
+                  core.info(`  created comment ${created.id} at ${created.html_url}`)
+                }
+              } catch (err) {
+                core.warning(`upsertPrComment failed: ${err.status} ${err.message}`)
+              }
+            }
+
+            await upsertCommitComment(sha)
+
+            let prNumbers = []
+            if (pr) {
+              prNumbers = [pr.number]
+            } else {
+              const { data: prs } = await github.rest.repos.listPullRequestsAssociatedWithCommit({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                commit_sha: sha,
+              })
+              prNumbers = prs.filter((p) => p.state === 'open').map((p) => p.number)
+            }
+            for (const prNumber of prNumbers) {
+              await upsertPrComment(prNumber)
+            }
