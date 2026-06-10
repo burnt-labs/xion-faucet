@@ -25,7 +25,7 @@ jobs:
        github.event.pull_request.head.repo.fork == false)
     runs-on: ubuntu-latest
     environment:
-      name: preview-testnet
+      name: testnet
       url: ${{ steps.extract.outputs.preview_url }}
     steps:
       - uses: actions/checkout@v4
