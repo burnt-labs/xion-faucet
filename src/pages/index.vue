@@ -2,29 +2,29 @@
 	<div v-if="isLoading" class="loading-overlay">
 		<v-img :src=$config.public.sendImage class="loading-image" />
 	</div>
-	<!-- Step 1: Add your Xion Testnet Address -->
+	<!-- Step 1: Add your Verona Testnet Address -->
 	<div v-else class="bg-dark-opacity">
 		<div class="text-center">
-			<h2>Add your Xion Address</h2>
+			<h2>Add your Verona Address</h2>
 			<div class="tooltip top">
 				<span class="tooltip-text">
-					Please enter your Xion wallet address which we'll use to transfer your testnet tokens.<br />
+					Please enter your Verona wallet address which we'll use to transfer your testnet tokens.<br />
 					It should begin with "xion1".
 				</span>
 			</div>
 			<div class="txt-details">
 				<p>
-					If you’re a developer aiming to test the functionality of the Xion network or set up a node on
-					testnet, you can obtain XION testnet tokens using this faucet.
+					If you’re a developer aiming to test the functionality of the Verona network or set up a node on
+					testnet, you can obtain Verona testnet tokens using this faucet.
 				</p>
 			</div>
 			<v-form ref="form" v-model="isValid">
 				<v-col cols="12">
 					<v-card class="mb-12 col-auto" color="lighten-1">
-						<v-text-field v-model="walletAddress" autocomplete="wallet-address" label="Xion Wallet Address"
+						<v-text-field v-model="walletAddress" autocomplete="wallet-address" label="Verona Wallet Address"
 							:hint="`Example: ${getConfigAddress()}`" required class="col-12" :rules="[
 								(value: string) => !!value || `Required.\n Example: ${getConfigAddress()}`,
-								(value: string) => /^(xion)1[a-z0-9]{38,64}$/.test(value) || 'Invalid xion address format.',
+								(value: string) => /^(xion)1[a-z0-9]{38,64}$/.test(value) || 'Invalid Verona address format.',
 							]" />
 						<v-select v-model="selectedDenom" :items=getConfigTokens() label="Select Denom"
 							required></v-select>
@@ -46,10 +46,6 @@
 		</div>
 	</div>
 	<div>
-		<v-alert shaped dismissible icon="mdi-shield-lock-outline" type="info" transition="scale-transition"
-			v-model="errorNonExistingAddress" class="mt-1">
-			Address is not in the expected format for this chain or does not exist.
-		</v-alert>
 		<v-alert shaped dismissible icon="mdi-shield-lock-outline" type="warning" transition="scale-transition"
 			v-model="errorRecaptcha" class="mt-1">
 			You haven't passed the reCaptcha Verification challenge yet.
@@ -85,17 +81,12 @@ export default {
 			isSuccess: false,
 			isValid: false,
 			statusCode: null,
-			errorNonExistingAddress: false,
 			errorRecaptcha: false,
 			errorMessage: '',
 			selectedDenom: '',
 			recievedAmount: this.$config.public.faucet.amountGiven,
 			recievedDenom: this.$config.public.faucet.denoms,
-			imageExists: false,
 		};
-	},
-	mounted() {
-		this.checkImageExists(this.$config.public.sendImage);
 	},
 	computed: {
 		isButtonDisabled() {
@@ -109,16 +100,6 @@ export default {
 		},
 	},
 	methods: {
-		checkImageExists(url: string) {
-			const img = new Image();
-			img.onload = () => {
-				this.imageExists = true;
-			};
-			img.onerror = () => {
-				this.imageExists = false;
-			};
-			img.src = url;
-		},
 		resetForm() {
 			this.isLoading = false;
 			this.verificationToken = '';

@@ -2,9 +2,9 @@
   <div id="header">
     <div class="flex-cont-header">
       <div class="status-header-left">
-        <img class="main-img-logo" src="../assets/img/xion-Logo-White.png" alt="logo" />
+        <img class="main-img-logo" src="../assets/img/verona_logo_main_light.svg" alt="Verona logo" />
       </div>
-      <h1 class="testnet-header">Xion Testnet Faucet</h1>
+      <h1 class="testnet-header">Verona Testnet Faucet</h1>
       <div class="status-header">
         <desktop-status :faucet-status="faucetStatus" :status-color="statusColor" :items="items" :selected="selected"
           @update:selected="$emit('update:selected', $event)" />
@@ -62,6 +62,7 @@ export default {
 
 .main-img-logo {
   width: 150px;
+  height: auto;
   display: block;
   padding-left: 15px;
 }

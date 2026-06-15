@@ -26,7 +26,6 @@ declare namespace Cloudflare {
         NUXT_FAUCET_MNEMONIC: string;
         NUXT_FAUCET_PATH_PATTERN: string;
         NUXT_TURNSTILE_SECRET_KEY: string;
-        NUXT_PUBLIC_BACKGROUND: string;
     }
 }
 interface Env extends Cloudflare.Env { }

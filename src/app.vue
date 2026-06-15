@@ -16,15 +16,15 @@ import HeaderSection from './components/HeaderSection.vue';
 import FooterSection from './components/FooterSection.vue';
 
 useHead({
-  title: 'Xion Testnet Faucet',
+  title: 'Verona Testnet Faucet',
   meta: [
     {
       name: 'description',
-      content: 'Xion Testnet Faucet',
+      content: 'Verona Testnet Faucet',
     },
     {
       name: 'keywords',
-      content: 'Xion, Testnet, Faucet',
+      content: 'Verona, Testnet, Faucet',
     },
   ],
 });
@@ -44,12 +44,9 @@ export default {
     };
   },
   watch: {
-    selected(newValue) {
+    selected() {
       this.updateFaucetStatus();
     },
-    selectedValue(newValue) {
-      this.$emit('update:selected', newValue);
-    }
   },
   mounted() {
     this.startFaucetStatusPolling();
