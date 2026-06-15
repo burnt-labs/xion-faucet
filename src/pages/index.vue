@@ -24,7 +24,7 @@
 						<v-text-field v-model="walletAddress" autocomplete="wallet-address" label="Verona Wallet Address"
 							:hint="`Example: ${getConfigAddress()}`" required class="col-12" :rules="[
 								(value: string) => !!value || `Required.\n Example: ${getConfigAddress()}`,
-								(value: string) => /^(xion)1[a-z0-9]{38,64}$/.test(value) || 'Invalid Verona address format.',
+								(value: string) => /^(xion)1[a-z0-9]{38,64}$/.test(value) || 'Address must begin with xion1.',
 							]" />
 						<v-select v-model="selectedDenom" :items=getConfigTokens() label="Select Denom"
 							required></v-select>
