@@ -36,8 +36,7 @@
 		</div>
 		<p class="footer-text">
 			&copy; {{ new Date().getFullYear() }} <a href="https://verona.dev" rel="noopener"
-				target="_blank">Verona</a> - The User-First Blockchain
-
+				target="_blank">Verona</a>
 		</p>
 	</v-footer>
 </template>
