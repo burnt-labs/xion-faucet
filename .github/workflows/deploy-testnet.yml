@@ -20,7 +20,7 @@ jobs:
           cache: npm
       - name: Write build-time env from GH Variables
         run: |
-          cat > .env <<EOF
+          cat > .env <<'EOF'
           NUXT_PUBLIC_TURNSTILE_SITE_KEY=${{ vars.NUXT_PUBLIC_TURNSTILE_SITE_KEY }}
           NUXT_PUBLIC_FAUCET_ADDRESS=${{ vars.NUXT_PUBLIC_FAUCET_ADDRESS }}
           NUXT_PUBLIC_FAUCET_ADDRESS_PREFIX=${{ vars.NUXT_PUBLIC_FAUCET_ADDRESS_PREFIX }}
@@ -61,7 +61,7 @@ jobs:
           cache: npm
       - name: Write build-time env from GH Variables
         run: |
-          cat > .env <<EOF
+          cat > .env <<'EOF'
           NUXT_PUBLIC_TURNSTILE_SITE_KEY=${{ vars.NUXT_PUBLIC_TURNSTILE_SITE_KEY }}
           NUXT_PUBLIC_FAUCET_ADDRESS=${{ vars.NUXT_PUBLIC_FAUCET_ADDRESS }}
           NUXT_PUBLIC_FAUCET_ADDRESS_PREFIX=${{ vars.NUXT_PUBLIC_FAUCET_ADDRESS_PREFIX }}
