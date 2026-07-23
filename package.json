@@ -14,12 +14,12 @@
     "cf-typegen": "wrangler types"
   },
   "dependencies": {
-    "@cosmjs/faucet": "^0.32.4",
-    "@cosmjs/stargate": "^0.32.4",
-    "@nuxt/scripts": "^0.11.0",
+    "@cosmjs/faucet": "^0.39.0",
+    "@cosmjs/stargate": "^0.39.0",
+    "@nuxt/scripts": "^0.11.13",
     "@nuxtjs/turnstile": "^0.9.11",
     "discord-interactions": "^4.3.0",
-    "nuxt": "^3.16.2",
+    "nuxt": "^4.5.0",
     "vue": "^3.5.13",
     "vue-router": "^4.5.0",
     "vuetify-nuxt-module": "^0.18.3"
@@ -28,6 +28,6 @@
     "@cloudflare/workers-types": "^4.20250417.0",
     "nitro-cloudflare-dev": "^0.2.2",
     "nitropack": "^2.11.9",
-    "wrangler": "^4.34.0"
+    "wrangler": "^4.114.0"
   }
 }
